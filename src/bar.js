@@ -422,7 +422,7 @@ async function activate({ inCurrentTab = false } = {}) {
     }
     return await openUrl(item.url, inCurrentTab);
   } catch (error) {
-    console.error('[command-bar] action failed', error);
+    console.error(`[command-bar] action failed: ${error?.name ?? ''} ${error?.message ?? error}`);
     await finish({ leftThisTab: false });
   }
 }

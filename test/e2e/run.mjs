@@ -290,6 +290,20 @@ try {
     expect(list.length === 1 && list[0].type === 'search' && list[0].selected, JSON.stringify(list));
   });
 
+  await step('Shift+Enter sends the typed text to the default search engine in a new tab', async () => {
+    await type(frame, 'kombucha brewing guide');
+    const before = (await allTabs()).length;
+    await key(frame, 'Enter', { shiftKey: true });
+    const searchTab = await waitFor(async () => {
+      const tabs = await allTabs();
+      return tabs.length === before + 1 && tabs.find((t) => /kombucha(\+|%20)brewing/.test(t.pendingUrl || t.url || ''));
+    }, 'a search tab');
+    await waitFor(async () => !(await overlayPresent(alpha)), 'the overlay to be removed');
+    await inWorker((id) => chrome.tabs.remove(id), searchTab.id);
+    await sleep(200);
+    frame = await openBar(alpha);
+  });
+
   await step('">" lists commands; "タブを複製" duplicates the current tab', async () => {
     await type(frame, '>');
     const list = await rows(frame);

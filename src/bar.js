@@ -2,9 +2,10 @@
 // page ("overlay"), the toolbar popup ("popup"), a small fallback window
 // ("window") and the new tab page ("newtab").
 
+import { forgetArchived, loadArchive, loadSettings } from './autoclose.js';
 import { availableCommands, findCommand } from './commands.js';
 import { MAX_TEXT_LENGTH } from './lib/fuzzy.js';
-import { buildIndex, defaultResults, search } from './lib/rank.js';
+import { buildArchiveIndex, buildIndex, defaultResults, search } from './lib/rank.js';
 import { dedupeKey, describeOrigin, toUrl } from './lib/url.js';
 
 const HISTORY_DAYS = 90;
@@ -28,7 +29,7 @@ const OWN_ORIGIN = chrome.runtime.getURL('');
 /** Empty new tabs (ours or Chrome's) are not worth listing as places to go. */
 const isBlankTab = (url) => !url || url.startsWith(OWN_ORIGIN) || url.startsWith('chrome://newtab');
 
-const TYPE_LABEL = { tab: 'タブ', closed: '最近閉じた', bookmark: 'ブックマーク', history: '履歴', command: 'コマンド' };
+const TYPE_LABEL = { tab: 'タブ', closed: '最近閉じた', archived: 'アーカイブ', bookmark: 'ブックマーク', history: '履歴', command: 'コマンド' };
 
 const state = {
   /** @type {chrome.tabs.Tab | null} */
@@ -38,6 +39,10 @@ const state = {
   items: [],
   /** @type {{kind: string, item?: any, url?: string, text?: string, titlePositions?: number[], urlPositions?: number[]}[]} */
   rows: [],
+  /** What the bar lists: everything, or only the tabs that were closed automatically. */
+  view: 'all',
+  /** @type {boolean | undefined} unknown until the setting has been read */
+  autoClose: undefined,
   selected: 0,
   /** @type {string | null} last pointer position seen over the list */
   pointerAt: null,
@@ -60,7 +65,8 @@ async function main() {
   state.sources.tabs = tabs.filter((t) => !isBlankTab(t.url || t.pendingUrl));
   rebuild();
 
-  const [closed, bookmarks, history] = await Promise.all([loadClosed(), loadBookmarks(), loadHistory()]);
+  const [closed, bookmarks, history, settings] = await Promise.all([loadClosed(), loadBookmarks(), loadHistory(), loadSettings().catch(() => null)]);
+  state.autoClose = settings?.enabled;
   state.sources.closed = closed;
   state.sources.bookmarks = bookmarks;
   state.sources.history = history;
@@ -128,7 +134,8 @@ function loadHistory() {
 }
 
 function rebuild() {
-  const ctx = { tab: mode === 'newtab' ? null : state.contextTab };
+  if (state.view !== 'all') return;
+  const ctx = { tab: mode === 'newtab' ? null : state.contextTab, autoClose: state.autoClose };
   state.items = buildIndex({
     ...state.sources,
     commands: availableCommands(ctx),
@@ -143,7 +150,13 @@ function update({ keepSelection = false } = {}) {
   const trimmed = query.trim();
   const rows = [];
 
-  if (!trimmed) {
+  if (state.view === 'archive') {
+    const results = trimmed
+      ? search(query, state.items, { limit: RESULT_LIMIT })
+      : state.items.slice(0, RESULT_LIMIT).map((item) => ({ item, titlePositions: [], urlPositions: [] }));
+    for (const r of results) rows.push({ kind: 'item', ...r });
+    if (!rows.length) rows.push({ kind: 'empty', text: trimmed ? '一致するタブはありません' : 'アーカイブしたタブはありません' });
+  } else if (!trimmed) {
     for (const r of defaultResults(state.items, { limit: RESULT_LIMIT })) rows.push({ kind: 'item', ...r });
   } else {
     const results = search(query, state.items, { limit: RESULT_LIMIT });
@@ -185,7 +198,10 @@ function renderRow(row, index) {
   const badge = document.createElement('span');
   badge.className = 'badge';
 
-  if (row.kind === 'url') {
+  if (row.kind === 'empty') {
+    li.dataset.type = 'empty';
+    title.textContent = row.text;
+  } else if (row.kind === 'url') {
     li.dataset.type = 'url';
     icon.textContent = '↗';
     title.textContent = row.url;
@@ -363,7 +379,7 @@ function onKeyDown(event) {
       return undefined;
     case 'Enter':
       event.preventDefault();
-      if (event.shiftKey) return webSearch(input.value.trim());
+      if (event.shiftKey && state.view === 'all') return webSearch(input.value.trim());
       return activate({ inCurrentTab: event.altKey });
     case 'Escape':
       event.preventDefault();
@@ -403,6 +419,7 @@ async function activate({ inCurrentTab = false } = {}) {
     return;
   }
   try {
+    if (row.kind === 'empty') return;
     if (row.kind === 'url') return await openUrl(row.url, inCurrentTab);
     if (row.kind === 'search') return await webSearch(row.text);
 
@@ -416,8 +433,14 @@ async function activate({ inCurrentTab = false } = {}) {
       await chrome.sessions.restore(item.sessionId);
       return await finish({ leftThisTab: true });
     }
+    if (item.type === 'archived') {
+      await forgetArchived(item.url);
+      return await openUrl(item.url, inCurrentTab);
+    }
     if (item.type === 'command') {
-      await findCommand(item.commandId)?.run({ tab: state.contextTab });
+      const command = findCommand(item.commandId);
+      if (command?.view === 'archive') return await showArchive();
+      await command?.run({ tab: state.contextTab });
       return await finish({ leftThisTab: false });
     }
     return await openUrl(item.url, inCurrentTab);
@@ -425,6 +448,17 @@ async function activate({ inCurrentTab = false } = {}) {
     console.error(`[yadokari] action failed: ${error?.name ?? ''} ${error?.message ?? error}`);
     await finish({ leftThisTab: false });
   }
+}
+
+/** Turns the bar into a list of the automatically closed tabs, newest first. */
+async function showArchive() {
+  state.view = 'archive';
+  document.documentElement.dataset.view = 'archive';
+  state.items = buildArchiveIndex(await loadArchive());
+  input.value = '';
+  input.placeholder = 'アーカイブしたタブを検索';
+  update();
+  input.focus();
 }
 
 async function openUrl(url, inCurrentTab) {

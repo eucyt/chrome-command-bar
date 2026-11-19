@@ -3,7 +3,7 @@
 import { normalize, positionsPrepared, prepare, scorePrepared, toNeedle, typoVariants } from './fuzzy.js';
 import { dedupeKey, isOpenable, matchableUrl } from './url.js';
 
-/** @typedef {'tab' | 'closed' | 'bookmark' | 'history' | 'command'} ItemType */
+/** @typedef {'tab' | 'closed' | 'archived' | 'bookmark' | 'history' | 'command'} ItemType */
 
 /**
  * @typedef {object} Item
@@ -23,13 +23,25 @@ import { dedupeKey, isOpenable, matchableUrl } from './url.js';
  * @property {number} [lastVisitTime]
  */
 
-const TYPE_BONUS = { tab: 1.2, bookmark: 0.6, closed: 0.4, history: 0, command: -0.2 };
-const TYPE_ORDER = { tab: 0, closed: 1, bookmark: 2, command: 3, history: 4 };
+const TYPE_BONUS = { tab: 1.2, bookmark: 0.6, closed: 0.4, archived: 0.4, history: 0, command: -0.2 };
+const TYPE_ORDER = { tab: 0, closed: 1, archived: 1, bookmark: 2, command: 3, history: 4 };
 const URL_WEIGHT = 0.95;
 const KEYWORD_WEIGHT = 0.9;
 const MIN_SCORE_PER_CHAR = 0.34;
 const TYPO_PENALTY = 1.0;
 const DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * The archive of auto-closed tabs as its own list, newest first. It is browsed
+ * through a command and deliberately kept out of the everyday index.
+ * @param {{url: string, title: string, closedAt: number}[]} entries
+ * @returns {Item[]}
+ */
+export function buildArchiveIndex(entries = []) {
+  return [...entries]
+    .sort((a, b) => b.closedAt - a.closedAt)
+    .map((e) => ({ type: 'archived', title: e.title || e.url, url: e.url, matchUrl: matchableUrl(e.url), lastAccessed: e.closedAt }));
+}
 
 /**
  * Merges every source into one list, dropping duplicates of the same page.

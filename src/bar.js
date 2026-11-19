@@ -5,11 +5,11 @@
 import { forgetArchived, loadArchive, loadSettings } from './autoclose.js';
 import { availableCommands, findCommand } from './commands.js';
 import { MAX_TEXT_LENGTH } from './lib/fuzzy.js';
+import { DEFAULTS, opensInCurrentTab } from './lib/preferences.js';
 import { buildArchiveIndex, buildIndex, defaultResults, search } from './lib/rank.js';
 import { dedupeKey, describeOrigin, toUrl } from './lib/url.js';
+import { loadPreferences } from './preferences.js';
 
-const HISTORY_DAYS = 90;
-const HISTORY_MAX = 4000;
 const RESULT_LIMIT = 50;
 const DAY = 24 * 60 * 60 * 1000;
 const NONCE_PREFIX = 'nonce:';
@@ -43,6 +43,8 @@ const state = {
   view: 'all',
   /** @type {boolean | undefined} unknown until the setting has been read */
   autoClose: undefined,
+  /** @type {import('./lib/preferences.js').Preferences} */
+  prefs: DEFAULTS,
   selected: 0,
   /** @type {string | null} last pointer position seen over the list */
   pointerAt: null,
@@ -51,10 +53,12 @@ const state = {
 main();
 
 async function main() {
-  if (!(await resolveContext())) {
+  const [allowed, prefs] = await Promise.all([resolveContext(), loadPreferences().catch(() => DEFAULTS)]);
+  if (!allowed) {
     document.body.replaceChildren();
     return;
   }
+  state.prefs = prefs;
   localizeHints();
   renderOrigin();
   bindEvents();
@@ -129,7 +133,7 @@ async function loadBookmarks() {
 
 function loadHistory() {
   return chrome.history
-    .search({ text: '', startTime: Date.now() - HISTORY_DAYS * DAY, maxResults: HISTORY_MAX })
+    .search({ text: '', startTime: Date.now() - state.prefs.historyDays * DAY, maxResults: state.prefs.historyMax })
     .catch(() => []);
 }
 
@@ -157,7 +161,7 @@ function update({ keepSelection = false } = {}) {
     for (const r of results) rows.push({ kind: 'item', ...r });
     if (!rows.length) rows.push({ kind: 'empty', text: trimmed ? '一致するタブはありません' : 'アーカイブしたタブはありません' });
   } else if (!trimmed) {
-    for (const r of defaultResults(state.items, { limit: RESULT_LIMIT })) rows.push({ kind: 'item', ...r });
+    for (const r of defaultResults(state.items, { limit: RESULT_LIMIT, closedLimit: state.prefs.closedCount })) rows.push({ kind: 'item', ...r });
   } else {
     const results = search(query, state.items, { limit: RESULT_LIMIT });
     const commandOnly = trimmed.startsWith('>');
@@ -307,6 +311,9 @@ function renderOrigin() {
 }
 
 function localizeHints() {
+  if (state.prefs.openIn === 'currentTab') {
+    for (const el of document.querySelectorAll('.alt-action')) el.textContent = '新しいタブで開く';
+  }
   if (isMac) return;
   for (const el of document.querySelectorAll('.alt-key')) el.textContent = 'Alt ↵';
 }
@@ -335,7 +342,7 @@ function bindEvents() {
     const row = event.target.closest?.('.row');
     if (!row) return;
     state.selected = Number(row.dataset.index);
-    activate({ inCurrentTab: event.altKey });
+    activate({ inCurrentTab: opensInCurrentTab(state.prefs, event.altKey) });
   });
 
   if (mode === 'overlay') {
@@ -380,7 +387,7 @@ function onKeyDown(event) {
     case 'Enter':
       event.preventDefault();
       if (event.shiftKey && state.view === 'all') return webSearch(input.value.trim());
-      return activate({ inCurrentTab: event.altKey });
+      return activate({ inCurrentTab: opensInCurrentTab(state.prefs, event.altKey) });
     case 'Escape':
       event.preventDefault();
       return close();

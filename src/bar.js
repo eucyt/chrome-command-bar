@@ -4,7 +4,9 @@
 
 import { forgetArchived, loadArchive, loadSettings } from './autoclose.js';
 import { availableCommands, findCommand } from './commands.js';
+import { readIndexCache, writeIndexCache } from './index-cache.js';
 import { MAX_TEXT_LENGTH } from './lib/fuzzy.js';
+import { isFresh, makeCache } from './lib/index-cache.js';
 import { DEFAULTS, opensInCurrentTab } from './lib/preferences.js';
 import { buildArchiveIndex, buildIndex, defaultResults, search } from './lib/rank.js';
 import { dedupeKey, describeOrigin, toUrl } from './lib/url.js';
@@ -64,17 +66,35 @@ async function main() {
   bindEvents();
   input.focus();
 
-  // Tabs come back at once; show them before the slower sources arrive.
-  const tabs = await chrome.tabs.query({}).catch(() => []);
+  // Tabs come back at once, and bookmarks and history are listed from the copy
+  // the previous bar left behind. The slower sources follow.
+  const [tabs, stored] = await Promise.all([chrome.tabs.query({}).catch(() => []), readIndexCache()]);
   state.sources.tabs = tabs.filter((t) => !isBlankTab(t.url || t.pendingUrl));
+  if (stored.cache) {
+    state.sources.bookmarks = stored.cache.bookmarks;
+    state.sources.history = stored.cache.history;
+  }
   rebuild();
 
-  const [closed, bookmarks, history, settings] = await Promise.all([loadClosed(), loadBookmarks(), loadHistory(), loadSettings().catch(() => null)]);
+  const fresh = isFresh(stored.cache, { changedAt: stored.changedAt, prefs });
+  const [closed, reloaded, settings] = await Promise.all([loadClosed(), fresh ? null : reloadCache(), loadSettings().catch(() => null)]);
   state.autoClose = settings?.enabled;
   state.sources.closed = closed;
-  state.sources.bookmarks = bookmarks;
-  state.sources.history = history;
+  if (reloaded) {
+    state.sources.bookmarks = reloaded.bookmarks;
+    state.sources.history = reloaded.history;
+  }
   rebuild();
+}
+
+/** Reads bookmarks and history from the APIs and leaves a copy for the next bar. */
+async function reloadCache() {
+  const loadedAt = Date.now();
+  const [bookmarks, history] = await Promise.all([loadBookmarks(), loadHistory()]);
+  const cache = makeCache({ bookmarks, history, prefs: state.prefs, loadedAt });
+  // Not awaited: the rows should not wait for the write.
+  writeIndexCache(cache);
+  return cache;
 }
 
 /**

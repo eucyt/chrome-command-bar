@@ -1,19 +1,26 @@
-// Service worker: opens and closes the bar, and closes idle tabs. All searching happens in the bar page itself.
+// Service worker: opens and closes the bar, closes idle tabs and notes when bookmarks or history change.
+// All searching happens in the bar page itself.
 
 import { watchTabs } from './autoclose.js';
+import { watchSources } from './index-cache.js';
 
 const BAR_PAGE = 'src/bar.html';
 const NONCE_PREFIX = 'nonce:';
 const WINDOW_SIZE = { width: 720, height: 480 };
 
 watchTabs();
+watchSources();
 
 chrome.commands.onCommand.addListener((command, tab) => {
   if (command === 'toggle-bar') toggleBar(tab);
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
-  const all = await chrome.storage.session.get(null);
+  // Asked for by name where Chrome can list the keys (130+): get(null) would
+  // also copy the cached search data, on every closed tab.
+  const session = chrome.storage.session;
+  const keys = session.getKeys ? (await session.getKeys()).filter((k) => k.startsWith(NONCE_PREFIX)) : null;
+  const all = await session.get(keys);
   const stale = Object.keys(all).filter((k) => k.startsWith(NONCE_PREFIX) && all[k]?.tabId === tabId);
   if (stale.length) await chrome.storage.session.remove(stale);
 });

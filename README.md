@@ -18,20 +18,11 @@ Arcの使い勝手をChromeに持ち込む個人用の拡張機能。名前は�
 
 更新するときは、新しいzipを同じフォルダに展開し直し、`chrome://extensions` で拡張機能を再読み込みする。
 
-## ⌘Tでも開く(macOS、任意)
-
-既定のショートカットは ⌃T。Chromeは⌘Tを拡張に割り当てさせないので、⌘Tで開きたい場合は、Karabiner-ElementsでChromeが前面のときだけ⌘Tを⌃Tに変換する。
-
-1. `karabiner/yadokari.json` を `~/.config/karabiner/assets/complex_modifications/` にコピーする。
-2. Karabiner-Elements の Complex Modifications → Add predefined rule から有効にする。
-
-⌘⇧T(閉じたタブを開く)はそのまま使える。拡張のショートカットを⌃T以外にした場合は、JSONの `to` を合わせる。
-
 ## 使い方
 
 | キー | 動作 |
 |---|---|
-| ⌃T(Karabiner設定後は⌘Tでも可) | バーを開く／閉じる |
+| ⌃T | バーを開く／閉じる |
 | ↑↓、Tab、Ctrl+N / Ctrl+P | 選択を移動 |
 | Enter | 選択した行を開く。タブなら切り替え、それ以外は新しいタブで開く |
 | ⌥Enter | 現在のタブで開く |
@@ -100,5 +91,4 @@ src/newtab.html        新規タブページ
 src/commands.js        「>」で出るコマンド
 src/lib/               曖昧一致・順位付け・URL判定(純粋関数)
 test/                  単体テストと実機テスト
-karabiner/             ⌘T変換ルール
 ```

@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "Command Bar",
+  "version": "0.1.0",
+  "description": "タブ・ブックマーク・履歴を曖昧検索するコマンドバー。Arcの⌘TをChromeで再現する個人用拡張機能。",
+  "minimum_chrome_version": "127",
+  "permissions": [
+    "activeTab",
+    "bookmarks",
+    "favicon",
+    "history",
+    "scripting",
+    "search",
+    "sessions",
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Command Bar",
+    "default_popup": "src/bar.html?mode=popup"
+  },
+  "commands": {
+    "toggle-bar": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "コマンドバーを開く／閉じる"
+    }
+  },
+  "chrome_url_overrides": {
+    "newtab": "src/newtab.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/bar.html"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

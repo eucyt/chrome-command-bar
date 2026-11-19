@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ja" data-mode="newtab">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <title>新しいタブ</title>
+    <link rel="stylesheet" href="bar.css" />
+    <script src="mode.js"></script>
+  </head>
+  <body>
+    <div id="backdrop">
+      <div id="panel" role="search" aria-label="コマンドバー">
+        <div id="input-row">
+          <input
+            id="query"
+            type="text"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="results"
+            aria-autocomplete="list"
+            autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
+            placeholder="タブ・ブックマーク・履歴を検索、またはURLを入力"
+            autofocus
+          />
+        </div>
+        <ul id="results" role="listbox" aria-label="検索結果"></ul>
+        <div id="footer">
+          <span id="origin"></span>
+          <span id="hints">
+            <kbd>↑↓</kbd>選択 <kbd>↵</kbd>開く <kbd>⇧↵</kbd>Web検索
+          </span>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="bar.js"></script>
+  </body>
+</html>

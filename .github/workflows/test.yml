@@ -46,7 +46,8 @@ jobs:
           if-no-files-found: ignore
 
   package:
-    # Only a commit that passed both suites gets a downloadable build.
+    # Only a commit on main that passed both suites gets a downloadable build.
+    if: github.event_name == 'push'
     needs: [unit, e2e]
     runs-on: ubuntu-24.04
     timeout-minutes: 5

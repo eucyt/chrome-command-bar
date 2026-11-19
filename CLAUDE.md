@@ -65,6 +65,7 @@ test/*.test.js       単体テストとガードレール(node --test)
 test/e2e/harness.mjs 実機テストの共通部品(Chrome起動、本物のキー入力、スクリーンショット)
 test/e2e/*.e2e.mjs   実機テスト。1ファイルが1回のChrome起動
 scripts/setup.sh     実機テストの準備
+scripts/package.mjs  配布するファイルを dist/yadokari/ に集める。CIがzipの成果物にする
 .claude/settings.json  検証コマンドの許可と、セッション開始時の準備
 .claude/skills/        このリポジトリ用のスキル(並列実装の指揮)
 ```

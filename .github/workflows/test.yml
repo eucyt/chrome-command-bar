@@ -44,3 +44,23 @@ jobs:
           name: e2e-screenshots
           path: test/e2e/artifacts/
           if-no-files-found: ignore
+
+  package:
+    # Only a commit that passed both suites gets a downloadable build.
+    needs: [unit, e2e]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run package
+      - name: Name the artifact after the version and commit
+        run: echo "ARTIFACT_NAME=yadokari-$(node -p "require('./manifest.json').version")-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+      # Upload the directory, not a zip: GitHub zips artifacts itself, so the download is the extension zip.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: dist/yadokari/
+          if-no-files-found: error

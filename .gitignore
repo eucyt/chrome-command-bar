@@ -2,4 +2,5 @@ node_modules/
 .DS_Store
 test/e2e/artifacts/
 *.zip
+dist/
 .claude/settings.local.json

@@ -107,6 +107,12 @@ export const COMMANDS = [
     when: (ctx) => ctx.autoClose === false,
     run: () => setEnabled(true),
   },
+  {
+    id: 'open-options',
+    title: 'Yadokariの設定を開く',
+    keywords: 'yadokari settings options preferences settei',
+    run: () => chrome.runtime.openOptionsPage(),
+  },
   { id: 'open-history', title: '履歴を開く', keywords: 'history rireki', run: (ctx) => openInternal(ctx, 'chrome://history') },
   { id: 'open-bookmarks', title: 'ブックマークマネージャを開く', keywords: 'bookmarks manager', run: (ctx) => openInternal(ctx, 'chrome://bookmarks') },
   { id: 'open-downloads', title: 'ダウンロードを開く', keywords: 'downloads', run: (ctx) => openInternal(ctx, 'chrome://downloads') },

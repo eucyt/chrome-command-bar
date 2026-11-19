@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Yadokari の設定</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Yadokari の設定</h1>
+      <p class="lead">変更はその場で保存され、次にバーを開いたときから効く。<span id="status" role="status"></span></p>
+
+      <form id="options">
+        <section>
+          <h2>検索</h2>
+          <label class="field">
+            <span class="name">履歴の対象期間</span>
+            <span class="control"><input type="number" name="historyDays" inputmode="numeric" /> 日</span>
+          </label>
+          <label class="field">
+            <span class="name">履歴の最大件数</span>
+            <span class="control"><input type="number" name="historyMax" inputmode="numeric" step="100" /> 件</span>
+          </label>
+          <label class="field">
+            <span class="name">未入力時に表示する「最近閉じたタブ」</span>
+            <span class="control"><input type="number" name="closedCount" inputmode="numeric" /> 件</span>
+          </label>
+        </section>
+
+        <section>
+          <h2>開き方</h2>
+          <fieldset>
+            <legend>Enter で開く先</legend>
+            <label><input type="radio" name="openIn" value="newTab" /> 新しいタブ</label>
+            <label><input type="radio" name="openIn" value="currentTab" /> 現在のタブ</label>
+            <p class="note"><span id="modifier">⌥</span>Enter は、選ばなかったほうで開く。タブの行は、どちらでもそのタブに切り替える。</p>
+          </fieldset>
+        </section>
+
+        <section>
+          <h2>新規タブページ</h2>
+          <label class="check">
+            <input type="checkbox" name="newtabFocus" />
+            <span>開いたときに入力欄へカーソルを移す</span>
+          </label>
+          <p class="note">ページを一度読み直すことで実現しているため、アドレスバーに拡張機能のURLが表示される。オフにすると、カーソルはアドレスバーに残る。</p>
+        </section>
+
+        <section>
+          <h2>ショートカット</h2>
+          <div class="field">
+            <span class="name">コマンドバーを開く／閉じる: <kbd id="shortcut"></kbd></span>
+            <span class="control"><button type="button" id="open-shortcuts">ショートカット設定を開く</button></span>
+          </div>
+        </section>
+      </form>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

@@ -23,6 +23,10 @@
     "default_title": "Yadokari",
     "default_popup": "src/bar.html?mode=popup"
   },
+  "options_ui": {
+    "page": "src/options.html",
+    "open_in_tab": true
+  },
   "commands": {
     "toggle-bar": {
       "suggested_key": {

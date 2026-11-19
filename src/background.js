@@ -1,8 +1,12 @@
-// Service worker: opens and closes the bar. All searching happens in the bar page itself.
+// Service worker: opens and closes the bar, and closes idle tabs. All searching happens in the bar page itself.
+
+import { watchTabs } from './autoclose.js';
 
 const BAR_PAGE = 'src/bar.html';
 const NONCE_PREFIX = 'nonce:';
 const WINDOW_SIZE = { width: 720, height: 480 };
+
+watchTabs();
 
 chrome.commands.onCommand.addListener((command, tab) => {
   if (command === 'toggle-bar') toggleBar(tab);

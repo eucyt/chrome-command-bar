@@ -1,11 +1,17 @@
 // Actions offered in the bar besides "go to this page". Type ">" to list them all.
 
+import { setEnabled } from './autoclose.js';
+
 /**
  * @typedef {object} CommandContext
  * @property {chrome.tabs.Tab | null} tab the tab the bar was opened on
+ * @property {boolean} [autoClose] whether idle tabs are being closed
  */
 
-/** @type {{id: string, title: string, keywords: string, needsTab?: boolean, run: (ctx: CommandContext) => Promise<unknown>}[]} */
+/**
+ * `view` commands switch what the bar lists instead of running something and closing it.
+ * @type {{id: string, title: string, keywords: string, needsTab?: boolean, when?: (ctx: CommandContext) => boolean, view?: string, run?: (ctx: CommandContext) => Promise<unknown>}[]}
+ */
 export const COMMANDS = [
   {
     id: 'new-tab',
@@ -81,6 +87,26 @@ export const COMMANDS = [
     needsTab: true,
     run: ({ tab }) => navigator.clipboard.writeText(`[${tab.title ?? ''}](${tab.url ?? ''})`),
   },
+  {
+    id: 'show-archive',
+    title: 'アーカイブしたタブを表示',
+    keywords: 'archive archived auto close tabs jidou tojita',
+    view: 'archive',
+  },
+  {
+    id: 'auto-close-off',
+    title: 'タブの自動クローズをオフにする',
+    keywords: 'auto close archive tabs off disable jidou',
+    when: (ctx) => ctx.autoClose === true,
+    run: () => setEnabled(false),
+  },
+  {
+    id: 'auto-close-on',
+    title: 'タブの自動クローズをオンにする',
+    keywords: 'auto close archive tabs on enable jidou',
+    when: (ctx) => ctx.autoClose === false,
+    run: () => setEnabled(true),
+  },
   { id: 'open-history', title: '履歴を開く', keywords: 'history rireki', run: (ctx) => openInternal(ctx, 'chrome://history') },
   { id: 'open-bookmarks', title: 'ブックマークマネージャを開く', keywords: 'bookmarks manager', run: (ctx) => openInternal(ctx, 'chrome://bookmarks') },
   { id: 'open-downloads', title: 'ダウンロードを開く', keywords: 'downloads', run: (ctx) => openInternal(ctx, 'chrome://downloads') },
@@ -100,7 +126,7 @@ function openInternal({ tab }, url) {
 
 /** Commands usable right now; those acting on a tab are hidden when there is none. */
 export function availableCommands(ctx) {
-  return COMMANDS.filter((c) => !c.needsTab || ctx.tab);
+  return COMMANDS.filter((c) => (!c.needsTab || ctx.tab) && (!c.when || c.when(ctx)));
 }
 
 export function findCommand(id) {

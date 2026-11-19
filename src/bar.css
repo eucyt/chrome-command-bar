@@ -110,6 +110,21 @@ body {
   background: var(--selected);
 }
 
+/* The archive list has no web search. */
+:root[data-view='archive'] .all-only {
+  display: none;
+}
+
+.row[data-type='empty'] {
+  color: var(--muted);
+  background: none;
+}
+
+.row[data-type='empty'] .icon,
+.row[data-type='empty'] .badge {
+  display: none;
+}
+
 .icon {
   flex: 0 0 18px;
   width: 18px;

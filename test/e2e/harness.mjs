@@ -124,6 +124,8 @@ export async function launch() {
     );
   }
   const extensionId = new URL(workerTarget.url()).host;
+  // Keep what the service worker logs, so a failed step can show why the extension did what it did.
+  (await workerTarget.worker())?.on('console', (message) => workerLog.push(message.text()));
 
   // The service worker can be stopped and restarted by Chrome, so look it up on every call.
   const inWorker = async (fn, ...args) => {
@@ -145,6 +147,8 @@ export async function launch() {
 // --- step runner --------------------------------------------------------------
 
 const results = [];
+/** Console output of the extension's service worker since launch. */
+const workerLog = [];
 
 /** Runs one named check. A failure is recorded and the following steps still run. */
 export async function step(name, fn) {
@@ -158,6 +162,7 @@ export async function step(name, fn) {
     console.log(`FAIL ${name}`);
     console.log(`     ${String(error?.message ?? error).split('\n').join('\n     ')}`);
     console.log(`     screenshot: ${path.relative(process.cwd(), shot)}`);
+    for (const line of workerLog.splice(0)) console.log(`     service worker: ${line}`);
   }
 }
 

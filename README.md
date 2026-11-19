@@ -44,6 +44,7 @@ Chromeは⌘Tを拡張に割り当てさせないので、Karabiner-ElementsでC
 - バーは拡張機能のページを `iframe` としてページに重ねている。入力内容と検索結果はページ側のスクリプトから読めない。
 - ページへの挿入は `activeTab` で行う。ショートカットを押したタブにだけ、その場で権限が付く。全サイトへの常時アクセス権(`<all_urls>`)は要求していない。
 - `iframe` には1回限りのトークンを渡している。Webページが勝手にこのページを埋め込んでも何も表示されない。
+- バーを開いている間にページがフォーカスを奪っても、バーが取り返す。打った文字がページ側の入力欄に流れないようにするため。
 - ページタイトルなど外部由来の文字列はテキストノードとしてだけ描画する。
 - 通信はしない。検索は開くたびに `tabs` / `bookmarks` / `history` / `sessions` APIから読み、メモリ上で行う。履歴は直近90日・最大4,000件。
 
@@ -65,22 +66,22 @@ Chromeは⌘Tを拡張に割り当てさせないので、Karabiner-ElementsでC
 
 ## 開発
 
-```sh
-npm test                 # 単体テスト(依存なし)
-npm install
-xvfb-run -a -s "-screen 0 1280x800x24" npm run test:e2e   # 実機テスト(Linux)
-```
+作業のルールと検証方法は [CLAUDE.md](CLAUDE.md) にある。
 
-実機テストは Chrome for Testing を起動し、Xサーバー経由で本物のキー入力を送る。必要なもの: Chrome for Testing(`CHROME_PATH` で指定可)、`python3` と `python-xlib`・`Pillow`、Xvfb。スクリーンショットは `test/e2e/artifacts/` に出る。
+```sh
+npm test            # 単体テストとガードレール(依存の導入は不要)
+npm run setup       # 実機テストの準備(Linux)
+npm run test:e2e    # 実機テスト。Chrome for Testing を起動し、本物のキー入力で操作する
+npm run check       # 上の2つのテストを続けて実行
+```
 
 ```
 manifest.json
-src/background.js   ショートカットを受けてバーを挿入・除去する
+src/background.js      ショートカットを受けてバーを挿入・除去する
 src/bar.{html,css,js}  バー本体(オーバーレイ・ポップアップ共通)
-src/newtab.html     新規タブページ
-src/commands.js     「>」で出るコマンド
-src/lib/fuzzy.js    曖昧一致のスコアリング
-src/lib/rank.js     各ソースの統合と順位付け
-src/lib/url.js      URL判定など
-karabiner/          ⌘T変換ルール
+src/newtab.html        新規タブページ
+src/commands.js        「>」で出るコマンド
+src/lib/               曖昧一致・順位付け・URL判定(純粋関数)
+test/                  単体テストと実機テスト
+karabiner/             ⌘T変換ルール
 ```

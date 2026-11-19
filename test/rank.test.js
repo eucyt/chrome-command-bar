@@ -15,7 +15,7 @@ function fixture() {
       { id: 3, windowId: 11, title: '受信トレイ - Gmail', url: 'https://mail.google.com/mail/u/0/#inbox', lastAccessed: NOW - 5000 },
     ],
     closed: [
-      { title: 'Karabiner-Elements', url: 'https://karabiner-elements.pqrs.org/', sessionId: 's1', lastModified: NOW - 60_000 },
+      { title: 'MDN Web Docs', url: 'https://developer.mozilla.org/', sessionId: 's1', lastModified: NOW - 60_000 },
     ],
     bookmarks: [
       { title: 'GitHub', url: 'https://github.com/', folder: 'ブックマーク バー dev' },
@@ -51,7 +51,7 @@ test('defaultResults lists other tabs by recency, the current tab last, then clo
     'octo/hakoniwa',
     '受信トレイ - Gmail',
     'Zenn｜エンジニアのための情報共有コミュニティ',
-    'Karabiner-Elements',
+    'MDN Web Docs',
   ]);
 });
 

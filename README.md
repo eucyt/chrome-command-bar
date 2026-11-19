@@ -1,3 +1,86 @@
 # chrome-command-bar
 
-Arcの⌘T(コマンドバー)をChromeで再現する個人用の拡張機能。
+Arcの⌘T(コマンドバー)をChromeで再現する個人用の拡張機能。タブ・ブックマーク・履歴・最近閉じたタブを1つの入力欄から曖昧検索する。依存ライブラリなし、ビルド不要。
+
+## インストール
+
+1. このリポジトリをcloneする。
+2. `chrome://extensions` を開き、右上の「デベロッパー モード」をオンにする。
+3. 「パッケージ化されていない拡張機能を読み込む」で、cloneしたフォルダを選ぶ。
+4. `chrome://extensions/shortcuts` で「コマンドバーを開く／閉じる」に ⌘⇧K が入っていることを確認する(他と衝突して空欄なら手で割り当てる)。
+
+新規タブページもこの拡張に置き換わる。初回はChromeが確認を出すので「変更を保持」を選ぶ。置き換えたくない場合は `manifest.json` の `chrome_url_overrides` を削除する。
+
+## ⌘Tで開く(macOS)
+
+Chromeは⌘Tを拡張に割り当てさせないので、Karabiner-ElementsでChromeが前面のときだけ⌘Tを⌘⇧Kに変換する。
+
+1. `karabiner/chrome-command-bar.json` を `~/.config/karabiner/assets/complex_modifications/` にコピーする。
+2. Karabiner-Elements の Complex Modifications → Add predefined rule から有効にする。
+
+⌘⇧T(閉じたタブを開く)はそのまま使える。拡張のショートカットを⌘⇧K以外にした場合は、JSONの `to` を合わせる。
+
+## 使い方
+
+| キー | 動作 |
+|---|---|
+| ⌘⇧K(Karabiner設定後は⌘T) | バーを開く／閉じる |
+| ↑↓、Tab、Ctrl+N / Ctrl+P | 選択を移動 |
+| Enter | 選択した行を開く。タブなら切り替え、それ以外は新しいタブで開く |
+| ⌥Enter | 現在のタブで開く |
+| ⇧Enter | 入力した文字列をそのままWeb検索 |
+| Ctrl+⌫ | 選択中のタブを閉じる(バーは開いたまま) |
+| Esc、パネルの外をクリック | 閉じる |
+
+- 何も入力しないと、他のタブを最近使った順に表示する。Enterで直前のタブに戻れる。
+- スペース区切りで複数語を入れると、すべてに一致する行だけ残る。
+- URLらしい入力(`github.com`、`localhost:3000`)は先頭に「このURLを開く」が出る。
+- `>` で始めるとコマンドだけを検索する(タブを複製、ピン留め、URLをコピーなど)。
+- 一致が0件のときは、1文字の打ち間違い(脱字・隣同士の入れ替え)を許して探し直す。
+- フッター左に、バーを開いたページのホスト名を表示する。HTTPSでないページは警告色になる。
+
+## 仕組みと権限
+
+- バーは拡張機能のページを `iframe` としてページに重ねている。入力内容と検索結果はページ側のスクリプトから読めない。
+- ページへの挿入は `activeTab` で行う。ショートカットを押したタブにだけ、その場で権限が付く。全サイトへの常時アクセス権(`<all_urls>`)は要求していない。
+- `iframe` には1回限りのトークンを渡している。Webページが勝手にこのページを埋め込んでも何も表示されない。
+- ページタイトルなど外部由来の文字列はテキストノードとしてだけ描画する。
+- 通信はしない。検索は開くたびに `tabs` / `bookmarks` / `history` / `sessions` APIから読み、メモリ上で行う。履歴は直近90日・最大4,000件。
+
+| 権限 | 用途 |
+|---|---|
+| `tabs` | 全タブのタイトルとURLを読む、切り替える |
+| `bookmarks` `history` `sessions` | 検索対象の取得、閉じたタブの復元 |
+| `activeTab` `scripting` | ショートカットを押したタブにバーを挿入 |
+| `search` | 既定の検索エンジンでのWeb検索 |
+| `favicon` | 行のアイコン表示 |
+| `storage` | トークンの一時保存(`storage.session`、ブラウザ終了で消える) |
+
+## 制約
+
+- `chrome://` ページ、Chromeウェブストア、PDFビューアなどには挿入できない。そこではツールバーのポップアップとして開く。
+- 新規タブページでは、入力欄にフォーカスを移すためにページを一度読み直している。その結果、アドレスバーに拡張機能のURLが表示される。
+- ページが全画面表示やモーダル `<dialog>` を出している間は、バーがその下に隠れることがある。
+- シークレットウィンドウでは、拡張機能の詳細で「シークレット モードでの実行を許可する」をオンにしない限り動かない。
+
+## 開発
+
+```sh
+npm test                 # 単体テスト(依存なし)
+npm install
+xvfb-run -a -s "-screen 0 1280x800x24" npm run test:e2e   # 実機テスト(Linux)
+```
+
+実機テストは Chrome for Testing を起動し、Xサーバー経由で本物のキー入力を送る。必要なもの: Chrome for Testing(`CHROME_PATH` で指定可)、`python3` と `python-xlib`・`Pillow`、Xvfb。スクリーンショットは `test/e2e/artifacts/` に出る。
+
+```
+manifest.json
+src/background.js   ショートカットを受けてバーを挿入・除去する
+src/bar.{html,css,js}  バー本体(オーバーレイ・ポップアップ共通)
+src/newtab.html     新規タブページ
+src/commands.js     「>」で出るコマンド
+src/lib/fuzzy.js    曖昧一致のスコアリング
+src/lib/rank.js     各ソースの統合と順位付け
+src/lib/url.js      URL判定など
+karabiner/          ⌘T変換ルール
+```

@@ -12,6 +12,7 @@ const HISTORY_MAX = 4000;
 const RESULT_LIMIT = 50;
 const DAY = 24 * 60 * 60 * 1000;
 const NONCE_PREFIX = 'nonce:';
+const REFOCUS_LIMIT = 50;
 
 const mode = document.documentElement.dataset.mode;
 const isMac = document.documentElement.dataset.platform === 'mac';
@@ -324,6 +325,13 @@ function bindEvents() {
   if (mode === 'overlay') {
     backdrop.addEventListener('click', (event) => {
       if (!panel.contains(event.target)) close();
+    });
+    // Without this, a page that calls focus() on one of its own fields would
+    // receive whatever is typed next. Capped so a page cannot drag the bar into
+    // an endless focus fight.
+    let refocusBudget = REFOCUS_LIMIT;
+    window.addEventListener('blur', () => {
+      if (refocusBudget-- > 0) window.parent.postMessage({ type: 'command-bar:focus' }, '*');
     });
   }
   if (mode === 'window') {

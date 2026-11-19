@@ -35,7 +35,9 @@ async function toggleBar(tab) {
       args: [`${chrome.runtime.getURL(BAR_PAGE)}?mode=overlay#${nonce}`],
     });
     if (injection?.result !== 'opened') await chrome.storage.session.remove(key);
-  } catch {
+  } catch (error) {
+    // Expected on chrome:// pages, the Web Store and the like.
+    console.info('[command-bar] cannot inject into this page, using the popup:', error?.message ?? error);
     await chrome.storage.session.remove(key);
     await openFallback(tab);
   }
@@ -100,7 +102,12 @@ function toggleOverlay(src) {
 
   const previouslyFocused = document.activeElement;
   const onMessage = (event) => {
-    if (event.source === frame.contentWindow && event.data?.type === 'command-bar:close') cleanup();
+    if (event.source !== frame.contentWindow) return;
+    if (event.data?.type === 'command-bar:close') cleanup();
+    // The bar lost the keyboard while open: the page called focus(), or Chrome
+    // restored focus after a tab switch. Hand it back, unless the whole window
+    // is in the background.
+    if (event.data?.type === 'command-bar:focus' && document.hasFocus()) frame.focus({ preventScroll: true });
   };
   const cleanup = () => {
     window.removeEventListener('message', onMessage);

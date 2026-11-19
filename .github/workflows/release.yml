@@ -1,0 +1,44 @@
+name: release
+
+# The whole release procedure: Actions -> release -> Run workflow, and pick how far to bump.
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 上げる桁
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/test.yml
+
+  release:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BUMP: ${{ inputs.bump }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The next version is counted up from the newest tag.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Work out the next version
+        run: echo "VERSION=$(bash scripts/next-version.sh "$BUMP")" >> "$GITHUB_ENV"
+      - name: Publish the release
+        run: |
+          npm run package -- "$VERSION"
+          (cd dist/yadokari && zip -r -q "../yadokari-$VERSION.zip" .)
+          gh release create "v$VERSION" "dist/yadokari-$VERSION.zip" --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes

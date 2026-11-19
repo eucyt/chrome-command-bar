@@ -47,7 +47,9 @@ Arcの使い勝手をChromeに持ち込む個人用の拡張機能。いまあ�
 
 ## リリース
 
-`manifest.json` の `version` を上げるPRをマージするだけ。`main` のテストが通ると、CIが `v<version>` のタグとGitHub Releaseを作り、zipを添付する。タグは手で打たない。バージョンは `manifest.json` にだけ書く。
+GitHubの Actions → `release` → Run workflow で、上げる桁(patch / minor / major)を選んで実行するだけ。`main` でテストを通したうえで、最新のタグから次のバージョンを決め、タグとGitHub Releaseを作ってzipを添付する。
+
+リリース済みのバージョンはタグだけが持つ。`manifest.json` の `version` は `0.0.0` のまま変えない(zipを作るときにCIが書き換える)。バージョンを上げるコミットは作らない。
 
 ## つまずきやすい点
 
@@ -69,7 +71,8 @@ test/*.test.js       単体テストとガードレール(node --test)
 test/e2e/harness.mjs 実機テストの共通部品(Chrome起動、本物のキー入力、スクリーンショット)
 test/e2e/*.e2e.mjs   実機テスト。1ファイルが1回のChrome起動
 scripts/setup.sh     実機テストの準備
-scripts/package.mjs  配布するファイルを dist/yadokari/ に集める。CIがzipにしてリリースに添付する
+scripts/package.mjs  配布するファイルを dist/yadokari/ に集める。リリース時にCIがzipにする
+scripts/next-version.sh  最新のタグから次のバージョンを決める
 .claude/settings.json  検証コマンドの許可と、セッション開始時の準備
 .claude/skills/        このリポジトリ用のスキル(並列実装の指揮)
 ```

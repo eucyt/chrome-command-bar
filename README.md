@@ -77,7 +77,7 @@ npm test            # 単体テストとガードレール(依存の導入は不
 npm run setup       # 実機テストの準備(Linux)
 npm run test:e2e    # 実機テスト。Chrome for Testing を起動し、本物のキー入力で操作する
 npm run check       # 上の2つのテストを続けて実行
-npm run package     # 配布するファイルだけを dist/yadokari/ に集める(CIがzipにしてリリースに添付するもの)
+npm run package     # 配布するファイルだけを dist/yadokari/ に集める(リリース時にCIがzipにするもの)
 ```
 
 ```

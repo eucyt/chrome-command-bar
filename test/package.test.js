@@ -42,8 +42,17 @@ test('every source file is in the package', () => {
   assert.deepEqual(list(path.join(out, 'src')), list(path.join(root, 'src')));
 });
 
-test('manifest.json is the only place that holds the version', () => {
-  // CI releases whatever version the manifest carries; a second copy could only drift from it.
-  assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
+test('the repository holds no real version, so releasing needs no commit', () => {
+  // Released versions live in git tags; the release workflow stamps one into the package.
+  assert.equal(manifest.version, '0.0.0');
   assert.ok(!('version' in pkg), 'package.json must not carry a version');
+});
+
+test('a release stamps its version into the packaged manifest only', () => {
+  const stamped = path.join(path.dirname(out), 'stamped');
+  stage(stamped, '1.2.3');
+  const read = (dir) => JSON.parse(readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
+  assert.deepEqual(read(stamped), { ...manifest, version: '1.2.3' });
+  assert.equal(read(root).version, '0.0.0');
+  assert.throws(() => stage(stamped, 'v1.2.3'), /not a version/);
 });

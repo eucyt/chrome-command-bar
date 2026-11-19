@@ -45,6 +45,10 @@ Arcの使い勝手をChromeに持ち込む個人用の拡張機能。いまあ�
 - PR本文は最大5行程度。背景とやったことを書き、`Closes #n` を付ける。コードを読めば分かること(ファイルの一覧、実装の説明、テストの件数)は書かない。
 - コメントには「なぜそうしているか」だけを書く。コードを読めば分かることは書かない。
 
+## リリース
+
+`manifest.json` の `version` を上げるPRをマージするだけ。`main` のテストが通ると、CIが `v<version>` のタグとGitHub Releaseを作り、zipを添付する。タグは手で打たない。バージョンは `manifest.json` にだけ書く。
+
 ## つまずきやすい点
 
 - **⌘T / Ctrl+T は拡張機能に割り当てられない。** Chromeが予約している。既定のショートカットは macOS が ⌃T、それ以外が Ctrl+Shift+K。⌘Tで開きたい場合はKarabinerで変換する。
@@ -65,7 +69,7 @@ test/*.test.js       単体テストとガードレール(node --test)
 test/e2e/harness.mjs 実機テストの共通部品(Chrome起動、本物のキー入力、スクリーンショット)
 test/e2e/*.e2e.mjs   実機テスト。1ファイルが1回のChrome起動
 scripts/setup.sh     実機テストの準備
-scripts/package.mjs  配布するファイルを dist/yadokari/ に集める。CIがzipの成果物にする
+scripts/package.mjs  配布するファイルを dist/yadokari/ に集める。CIがzipにしてリリースに添付する
 .claude/settings.json  検証コマンドの許可と、セッション開始時の準備
 .claude/skills/        このリポジトリ用のスキル(並列実装の指揮)
 ```

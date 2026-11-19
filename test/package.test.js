@@ -7,6 +7,7 @@ import { after, test } from 'node:test';
 import { stage } from '../scripts/package.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
+const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
 const out = path.join(mkdtempSync(path.join(tmpdir(), 'yadokari-package-')), 'yadokari');
 stage(out);
 after(() => rmSync(path.dirname(out), { recursive: true, force: true }));
@@ -41,8 +42,8 @@ test('every source file is in the package', () => {
   assert.deepEqual(list(path.join(out, 'src')), list(path.join(root, 'src')));
 });
 
-test('the manifest and package.json agree on the version', () => {
-  // The artifact is named after this version; a mismatch would mislabel the download.
-  const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(manifest.version, pkg.version);
+test('manifest.json is the only place that holds the version', () => {
+  // CI releases whatever version the manifest carries; a second copy could only drift from it.
+  assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
+  assert.ok(!('version' in pkg), 'package.json must not carry a version');
 });

@@ -1,6 +1,5 @@
 {
   "name": "yadokari",
-  "version": "0.1.0",
   "private": true,
   "description": "Arcの使い勝手をChromeに持ち込む個人用拡張機能",
   "type": "module",

@@ -45,23 +45,36 @@ jobs:
           path: test/e2e/artifacts/
           if-no-files-found: ignore
 
-  package:
-    # Only a commit on main that passed both suites gets a downloadable build.
+  release:
+    # Merging a version bump is the whole release procedure: a version on main without a release gets one.
     if: github.event_name == 'push'
     needs: [unit, e2e]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm run package
-      - name: Name the artifact after the version and commit
-        run: echo "ARTIFACT_NAME=yadokari-$(node -p "require('./manifest.json').version")-${GITHUB_SHA::7}" >> "$GITHUB_ENV"
-      # Upload the directory, not a zip: GitHub zips artifacts itself, so the download is the extension zip.
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: dist/yadokari/
-          if-no-files-found: error
+      - name: Check whether this version is already released
+        id: version
+        run: |
+          version="$(node -p "require('./manifest.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "v$version" > /dev/null 2>&1; then
+            echo "v$version is already released; nothing to do."
+          else
+            echo "pending=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publish the release
+        if: steps.version.outputs.pending == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          npm run package
+          (cd dist/yadokari && zip -r -q "../yadokari-$VERSION.zip" .)
+          gh release create "v$VERSION" "dist/yadokari-$VERSION.zip" --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes

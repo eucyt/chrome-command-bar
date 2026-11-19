@@ -1,5 +1,5 @@
 // Stages the files Chrome needs into a directory, leaving tests and tooling behind.
-// CI uploads that directory as an artifact; GitHub zips it, so the download is the extension zip.
+// CI zips that directory and attaches it to the GitHub release.
 
 import { cpSync, mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';

@@ -6,12 +6,14 @@ Arcの使い勝手をChromeに持ち込む個人用の拡張機能。名前は�
 
 ## インストール
 
-1. このリポジトリをcloneする。または、GitHub Actions の `test` ワークフローの実行結果から `yadokari-<バージョン>-<コミット>` をダウンロードして展開する(`main` のコミットがテストを通るたびに作られる。拡張機能の動作に必要なファイルだけが入っている)。
+1. [Releases](https://github.com/eucyt/yadokari/releases/latest) から `yadokari-<バージョン>.zip` をダウンロードして展開する。
 2. `chrome://extensions` を開き、右上の「デベロッパー モード」をオンにする。
-3. 「パッケージ化されていない拡張機能を読み込む」で、cloneまたは展開したフォルダを選ぶ。
+3. 「パッケージ化されていない拡張機能を読み込む」で、展開したフォルダを選ぶ。
 4. `chrome://extensions/shortcuts` で「コマンドバーを開く／閉じる」に ⌃T が入っていることを確認する(他と衝突して空欄なら手で割り当てる)。
 
 新規タブページもこの拡張に置き換わる。初回はChromeが確認を出すので「変更を保持」を選ぶ。置き換えたくない場合は `manifest.json` の `chrome_url_overrides` を削除する。
+
+更新するときは、新しいzipを同じフォルダに展開し直し、`chrome://extensions` で拡張機能を再読み込みする。
 
 ## ⌘Tでも開く(macOS、任意)
 
@@ -75,7 +77,7 @@ npm test            # 単体テストとガードレール(依存の導入は不
 npm run setup       # 実機テストの準備(Linux)
 npm run test:e2e    # 実機テスト。Chrome for Testing を起動し、本物のキー入力で操作する
 npm run check       # 上の2つのテストを続けて実行
-npm run package     # 配布するファイルだけを dist/yadokari/ に集める(CIが成果物にするもの)
+npm run package     # 配布するファイルだけを dist/yadokari/ に集める(CIがzipにしてリリースに添付するもの)
 ```
 
 ```

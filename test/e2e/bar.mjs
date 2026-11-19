@@ -2,7 +2,7 @@
 
 import { TOGGLE_SHORTCUT, pressGlobal, sleep, waitFor } from './harness.mjs';
 
-const OVERLAY_ID = 'chrome-command-bar-overlay';
+const OVERLAY_ID = 'yadokari-overlay';
 
 /** Pages shared by the bar tests. Pass to `serve()`, adding more as needed. */
 export const PAGES = {

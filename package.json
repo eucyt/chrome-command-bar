@@ -1,8 +1,8 @@
 {
-  "name": "chrome-command-bar",
+  "name": "yadokari",
   "version": "0.1.0",
   "private": true,
-  "description": "Chromeで⌘Tの曖昧検索コマンドバーを再現する個人用拡張機能",
+  "description": "Arcの使い勝手をChromeに持ち込む個人用拡張機能",
   "type": "module",
   "scripts": {
     "setup": "bash scripts/setup.sh",

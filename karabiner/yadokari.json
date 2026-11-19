@@ -1,8 +1,8 @@
 {
-  "title": "Chrome: ⌘T で Command Bar を開く",
+  "title": "Chrome: ⌘T で Yadokari のコマンドバーを開く",
   "rules": [
     {
-      "description": "Chrome が前面のとき、⌘T を ⌃T（Command Bar のショートカット）に変換する",
+      "description": "Chrome が前面のとき、⌘T を ⌃T（Yadokari のショートカット）に変換する",
       "manipulators": [
         {
           "type": "basic",

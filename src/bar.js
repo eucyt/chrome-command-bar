@@ -331,7 +331,7 @@ function bindEvents() {
     // an endless focus fight.
     let refocusBudget = REFOCUS_LIMIT;
     window.addEventListener('blur', () => {
-      if (refocusBudget-- > 0) window.parent.postMessage({ type: 'command-bar:focus' }, '*');
+      if (refocusBudget-- > 0) window.parent.postMessage({ type: 'yadokari:focus' }, '*');
     });
   }
   if (mode === 'window') {
@@ -422,7 +422,7 @@ async function activate({ inCurrentTab = false } = {}) {
     }
     return await openUrl(item.url, inCurrentTab);
   } catch (error) {
-    console.error(`[command-bar] action failed: ${error?.name ?? ''} ${error?.message ?? error}`);
+    console.error(`[yadokari] action failed: ${error?.name ?? ''} ${error?.message ?? error}`);
     await finish({ leftThisTab: false });
   }
 }
@@ -461,7 +461,7 @@ async function finish({ leftThisTab }) {
 
 function close() {
   if (mode === 'overlay') {
-    window.parent.postMessage({ type: 'command-bar:close' }, '*');
+    window.parent.postMessage({ type: 'yadokari:close' }, '*');
   } else if (mode !== 'newtab') {
     window.close();
   } else {

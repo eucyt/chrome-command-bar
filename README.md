@@ -1,6 +1,8 @@
-# chrome-command-bar
+# yadokari
 
-Arcの⌘T(コマンドバー)をChromeで再現する個人用の拡張機能。タブ・ブックマーク・履歴・最近閉じたタブを1つの入力欄から曖昧検索する。依存ライブラリなし、ビルド不要。
+Arcの使い勝手をChromeに持ち込む個人用の拡張機能。名前はヤドカリから。Chromeという殻に、Arcの習慣を持ち込んで住む。依存ライブラリなし、ビルド不要。
+
+いまある機能はコマンドバー(Arcの⌘T相当)。タブ・ブックマーク・履歴・最近閉じたタブを、1つの入力欄から曖昧検索する。
 
 ## インストール
 
@@ -15,7 +17,7 @@ Arcの⌘T(コマンドバー)をChromeで再現する個人用の拡張機能�
 
 既定のショートカットは ⌃T。Chromeは⌘Tを拡張に割り当てさせないので、⌘Tで開きたい場合は、Karabiner-ElementsでChromeが前面のときだけ⌘Tを⌃Tに変換する。
 
-1. `karabiner/chrome-command-bar.json` を `~/.config/karabiner/assets/complex_modifications/` にコピーする。
+1. `karabiner/yadokari.json` を `~/.config/karabiner/assets/complex_modifications/` にコピーする。
 2. Karabiner-Elements の Complex Modifications → Add predefined rule から有効にする。
 
 ⌘⇧T(閉じたタブを開く)はそのまま使える。拡張のショートカットを⌃T以外にした場合は、JSONの `to` を合わせる。

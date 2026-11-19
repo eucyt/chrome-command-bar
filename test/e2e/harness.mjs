@@ -108,7 +108,7 @@ export async function launch() {
     headless: false,
     pipe: true,
     enableExtensions: [extensionDir],
-    userDataDir: mkdtempSync(path.join(os.tmpdir(), 'command-bar-e2e-')),
+    userDataDir: mkdtempSync(path.join(os.tmpdir(), 'yadokari-e2e-')),
     defaultViewport: null,
     args: ['--no-sandbox', '--no-first-run', '--no-default-browser-check', '--window-size=1280,800', '--window-position=0,0'],
   });

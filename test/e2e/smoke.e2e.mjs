@@ -23,7 +23,7 @@ await chrome.inWorker(() => {
 
 await step('the extension is loaded from the repository root', async () => {
   const manifest = await chrome.inWorker(() => chrome.runtime.getManifest());
-  expect(manifest.name === 'Command Bar' && manifest.manifest_version === 3, `manifest: ${JSON.stringify(manifest)}`);
+  expect(manifest.name === 'Yadokari' && manifest.manifest_version === 3, `manifest: ${JSON.stringify(manifest)}`);
 });
 
 await step('real key presses reach the focused page', async () => {

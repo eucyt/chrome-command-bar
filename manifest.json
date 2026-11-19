@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Command Bar",
+  "name": "Yadokari",
   "version": "0.1.0",
-  "description": "タブ・ブックマーク・履歴を曖昧検索するコマンドバー。Arcの⌘TをChromeで再現する個人用拡張機能。",
+  "description": "Arcの使い勝手をChromeに持ち込む個人用拡張機能。タブ・ブックマーク・履歴を曖昧検索するコマンドバーなど。",
   "minimum_chrome_version": "127",
   "permissions": [
     "activeTab",
@@ -20,7 +20,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Command Bar",
+    "default_title": "Yadokari",
     "default_popup": "src/bar.html?mode=popup"
   },
   "commands": {

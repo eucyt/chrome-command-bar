@@ -37,7 +37,7 @@ async function toggleBar(tab) {
     if (injection?.result !== 'opened') await chrome.storage.session.remove(key);
   } catch (error) {
     // Expected on chrome:// pages, the Web Store and the like.
-    console.info('[command-bar] cannot inject into this page, using the popup:', error?.message ?? error);
+    console.info('[yadokari] cannot inject into this page, using the popup:', error?.message ?? error);
     await chrome.storage.session.remove(key);
     await openFallback(tab);
   }
@@ -69,7 +69,7 @@ async function openFallback(tab) {
  * @returns {'opened' | 'closed'}
  */
 function toggleOverlay(src) {
-  const ID = 'chrome-command-bar-overlay';
+  const ID = 'yadokari-overlay';
   const existing = document.getElementById(ID);
   if (existing) {
     if (typeof existing.__commandBarCleanup === 'function') existing.__commandBarCleanup();
@@ -81,7 +81,7 @@ function toggleOverlay(src) {
   frame.id = ID;
   frame.src = src;
   frame.allow = 'clipboard-write';
-  frame.title = 'Command Bar';
+  frame.title = 'Yadokari';
 
   const styles = {
     all: 'initial',
@@ -103,11 +103,11 @@ function toggleOverlay(src) {
   const previouslyFocused = document.activeElement;
   const onMessage = (event) => {
     if (event.source !== frame.contentWindow) return;
-    if (event.data?.type === 'command-bar:close') cleanup();
+    if (event.data?.type === 'yadokari:close') cleanup();
     // The bar lost the keyboard while open: the page called focus(), or Chrome
     // restored focus after a tab switch. Hand it back, unless the whole window
     // is in the background.
-    if (event.data?.type === 'command-bar:focus' && document.hasFocus()) frame.focus({ preventScroll: true });
+    if (event.data?.type === 'yadokari:focus' && document.hasFocus()) frame.focus({ preventScroll: true });
   };
   const cleanup = () => {
     window.removeEventListener('message', onMessage);

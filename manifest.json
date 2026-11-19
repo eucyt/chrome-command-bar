@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Command Bar",
+  "version": "0.0.0",
+  "description": "タブ・ブックマーク・履歴を曖昧検索するコマンドバー。Arcの⌘TをChromeで再現する個人用拡張機能。",
+  "minimum_chrome_version": "127",
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "commands": {
+    "toggle-bar": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "コマンドバーを開く／閉じる"
+    }
+  }
+}

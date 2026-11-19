@@ -2,7 +2,7 @@
   "title": "Chrome: ⌘T で Command Bar を開く",
   "rules": [
     {
-      "description": "Chrome が前面のとき、⌘T を ⌘⇧K（Command Bar のショートカット）に変換する",
+      "description": "Chrome が前面のとき、⌘T を ⌃T（Command Bar のショートカット）に変換する",
       "manipulators": [
         {
           "type": "basic",
@@ -15,8 +15,8 @@
           },
           "to": [
             {
-              "key_code": "k",
-              "modifiers": ["left_command", "left_shift"]
+              "key_code": "t",
+              "modifiers": ["left_control"]
             }
           ],
           "conditions": [

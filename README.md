@@ -7,24 +7,24 @@ Arcの⌘T(コマンドバー)をChromeで再現する個人用の拡張機能�
 1. このリポジトリをcloneする。
 2. `chrome://extensions` を開き、右上の「デベロッパー モード」をオンにする。
 3. 「パッケージ化されていない拡張機能を読み込む」で、cloneしたフォルダを選ぶ。
-4. `chrome://extensions/shortcuts` で「コマンドバーを開く／閉じる」に ⌘⇧K が入っていることを確認する(他と衝突して空欄なら手で割り当てる)。
+4. `chrome://extensions/shortcuts` で「コマンドバーを開く／閉じる」に ⌃T が入っていることを確認する(他と衝突して空欄なら手で割り当てる)。
 
 新規タブページもこの拡張に置き換わる。初回はChromeが確認を出すので「変更を保持」を選ぶ。置き換えたくない場合は `manifest.json` の `chrome_url_overrides` を削除する。
 
-## ⌘Tで開く(macOS)
+## ⌘Tでも開く(macOS、任意)
 
-Chromeは⌘Tを拡張に割り当てさせないので、Karabiner-ElementsでChromeが前面のときだけ⌘Tを⌘⇧Kに変換する。
+既定のショートカットは ⌃T。Chromeは⌘Tを拡張に割り当てさせないので、⌘Tで開きたい場合は、Karabiner-ElementsでChromeが前面のときだけ⌘Tを⌃Tに変換する。
 
 1. `karabiner/chrome-command-bar.json` を `~/.config/karabiner/assets/complex_modifications/` にコピーする。
 2. Karabiner-Elements の Complex Modifications → Add predefined rule から有効にする。
 
-⌘⇧T(閉じたタブを開く)はそのまま使える。拡張のショートカットを⌘⇧K以外にした場合は、JSONの `to` を合わせる。
+⌘⇧T(閉じたタブを開く)はそのまま使える。拡張のショートカットを⌃T以外にした場合は、JSONの `to` を合わせる。
 
 ## 使い方
 
 | キー | 動作 |
 |---|---|
-| ⌘⇧K(Karabiner設定後は⌘T) | バーを開く／閉じる |
+| ⌃T(Karabiner設定後は⌘Tでも可) | バーを開く／閉じる |
 | ↑↓、Tab、Ctrl+N / Ctrl+P | 選択を移動 |
 | Enter | 選択した行を開く。タブなら切り替え、それ以外は新しいタブで開く |
 | ⌥Enter | 現在のタブで開く |

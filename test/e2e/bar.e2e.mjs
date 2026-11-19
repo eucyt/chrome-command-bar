@@ -107,8 +107,13 @@ await step('Esc closes the bar and gives focus back to the page', async () => {
 
 await step('clicking outside the panel closes the bar', async () => {
   frame = await openBar(alpha);
-  await alpha.mouse.click(30, 600);
-  await waitClosed(alpha);
+  // Chrome routes clicks to a new frame only once it has been composited. A
+  // click sent sooner lands on the page underneath, so click until one arrives.
+  await waitFor(async () => {
+    await alpha.mouse.click(30, 600);
+    await sleep(250);
+    return !(await overlayPresent(alpha));
+  }, 'a click outside the panel to close the bar');
 });
 
 await step('bookmarks are found, bookmarklets are not, and Enter opens a new tab next to the current one', async () => {

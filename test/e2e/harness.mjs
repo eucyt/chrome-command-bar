@@ -108,7 +108,7 @@ export async function launch() {
     headless: false,
     pipe: true,
     enableExtensions: [extensionDir],
-    userDataDir: mkdtempSync(path.join(os.tmpdir(), 'command-bar-e2e-')),
+    userDataDir: mkdtempSync(path.join(os.tmpdir(), 'yadokari-e2e-')),
     defaultViewport: null,
     args: ['--no-sandbox', '--no-first-run', '--no-default-browser-check', '--window-size=1280,800', '--window-position=0,0'],
   });
@@ -124,6 +124,18 @@ export async function launch() {
     );
   }
   const extensionId = new URL(workerTarget.url()).host;
+  // Keep what the extension logs, so a failed step can show why it did what it did:
+  // the service worker's output, and errors from pages and the frames inside them.
+  (await workerTarget.worker())?.on('console', (message) => extensionLog.push(`service worker: ${message.text()}`));
+  const watchPage = async (target) => {
+    if (target.type() !== 'page') return;
+    const page = await target.page().catch(() => null);
+    page?.on('console', (message) => {
+      if (message.type() === 'error') extensionLog.push(`page console: ${message.text()}`);
+    });
+  };
+  browser.targets().forEach(watchPage);
+  browser.on('targetcreated', watchPage);
 
   // The service worker can be stopped and restarted by Chrome, so look it up on every call.
   const inWorker = async (fn, ...args) => {
@@ -145,6 +157,8 @@ export async function launch() {
 // --- step runner --------------------------------------------------------------
 
 const results = [];
+/** What the extension logged since the last failed step. */
+const extensionLog = [];
 
 /** Runs one named check. A failure is recorded and the following steps still run. */
 export async function step(name, fn) {
@@ -158,6 +172,7 @@ export async function step(name, fn) {
     console.log(`FAIL ${name}`);
     console.log(`     ${String(error?.message ?? error).split('\n').join('\n     ')}`);
     console.log(`     screenshot: ${path.relative(process.cwd(), shot)}`);
+    for (const line of extensionLog.splice(0)) console.log(`     ${line}`);
   }
 }
 

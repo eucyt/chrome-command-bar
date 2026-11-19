@@ -1,14 +1,15 @@
 {
-  "name": "chrome-command-bar",
-  "version": "0.0.0",
+  "name": "yadokari",
+  "version": "0.1.0",
   "private": true,
-  "description": "Chromeで⌘Tの曖昧検索コマンドバーを再現する個人用拡張機能",
+  "description": "Arcの使い勝手をChromeに持ち込む個人用拡張機能",
   "type": "module",
   "scripts": {
     "setup": "bash scripts/setup.sh",
     "test": "node --test \"test/*.test.js\"",
     "test:e2e": "node test/e2e/run.mjs",
-    "check": "npm test && npm run test:e2e"
+    "check": "npm test && npm run test:e2e",
+    "icons": "python3 scripts/make_icons.py"
   },
   "devDependencies": {
     "puppeteer-core": "^25.18.1"

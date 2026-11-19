@@ -5,14 +5,16 @@
   "description": "Chromeで⌘Tの曖昧検索コマンドバーを再現する個人用拡張機能",
   "type": "module",
   "scripts": {
-    "test": "node --test test/*.test.js",
+    "setup": "bash scripts/setup.sh",
+    "test": "node --test \"test/*.test.js\"",
     "test:e2e": "node test/e2e/run.mjs",
+    "check": "npm test && npm run test:e2e",
     "icons": "python3 scripts/make_icons.py"
   },
   "devDependencies": {
     "puppeteer-core": "^25.18.1"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

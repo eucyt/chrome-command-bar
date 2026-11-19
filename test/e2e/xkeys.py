@@ -3,8 +3,9 @@
 Puppeteer's keyboard reaches the page only. Extension shortcuts are handled by
 the browser itself, so they need key events from the X server (XTEST).
 
-  python3 xkeys.py key ctrl+shift+k
-  python3 xkeys.py shot out.png
+  python3 xkeys.py key ctrl+shift+k     one chord
+  python3 xkeys.py type "hello"         lowercase letters, digits and spaces
+  python3 xkeys.py shot out.png         screenshot of the whole display
 """
 import sys
 import time
@@ -61,6 +62,9 @@ if __name__ == "__main__":
         if "--no-focus" not in sys.argv:
             focus_browser(d)
         press(d, arg)
+    elif cmd == "type":
+        for ch in arg:
+            press(d, "space" if ch == " " else ch)
     elif cmd == "shot":
         shot(d, arg)
     else:

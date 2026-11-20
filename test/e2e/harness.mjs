@@ -90,6 +90,7 @@ export async function serve(pages) {
 
 /**
  * Starts Chrome with the extension loaded from the repository root.
+ * @param {{args?: string[]}} [options] extra Chrome flags
  * @returns {Promise<{
  *   browser: import('puppeteer-core').Browser,
  *   extensionId: string,
@@ -99,7 +100,7 @@ export async function serve(pages) {
  *   close: () => Promise<void>,
  * }>}
  */
-export async function launch() {
+export async function launch({ args = [] } = {}) {
   if (!process.env.DISPLAY) {
     throw new Error('No X display. Run through `npm run test:e2e`, which wraps the tests in xvfb-run.');
   }
@@ -110,7 +111,7 @@ export async function launch() {
     enableExtensions: [extensionDir],
     userDataDir: mkdtempSync(path.join(os.tmpdir(), 'yadokari-e2e-')),
     defaultViewport: null,
-    args: ['--no-sandbox', '--no-first-run', '--no-default-browser-check', '--window-size=1280,800', '--window-position=0,0'],
+    args: ['--no-sandbox', '--no-first-run', '--no-default-browser-check', '--window-size=1280,800', '--window-position=0,0', ...args],
   });
 
   const isOurWorker = (t) => t.type() === 'service_worker' && t.url().startsWith('chrome-extension://');

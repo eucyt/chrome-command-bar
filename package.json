@@ -9,6 +9,7 @@
     "test:e2e": "node test/e2e/run.mjs",
     "check": "npm test && npm run test:e2e",
     "package": "node scripts/package.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
     "icons": "python3 scripts/make_icons.py"
   },
   "devDependencies": {

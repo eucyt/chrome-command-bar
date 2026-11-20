@@ -20,7 +20,7 @@ Arcの使い勝手をChromeに持ち込む個人用の拡張機能。いまあ�
 - 挙動を足した・変えたら、その挙動を確かめるテストを同じPRに入れる。
   - ロジック(`src/lib/`)は単体テスト `test/<名前>.test.js`
   - ブラウザ上の挙動は実機テスト `test/e2e/<名前>.e2e.mjs`
-- 画面を変えたら、`test/e2e/artifacts/` に出るスクリーンショットを自分で開いて確認する。
+- 画面を変えたら、`test/e2e/artifacts/` に出るスクリーンショットを自分で開いて確認する。バーの見た目が変わったら `npm run screenshots` でREADMEの画像も撮り直す。
 - 自動テストで確かめられないこと(macOS固有の挙動、日本語入力など)は、#8 のチェックリストに追記し、PR本文で1行触れる。確かめていないことを確かめたように書かない。
 
 ## 守ること
@@ -41,7 +41,7 @@ Arcの使い勝手をChromeに持ち込む個人用の拡張機能。いまあ�
 - 着手前にissueの「要件」「完了条件」を読む。issueにない作業が必要になったら、PRを広げずに新しいissueを立てる。
 - 複数のissueを並行して進めるときは、`github-issue-orchestrator` スキルで親issueとsub-issueに分けて指揮する。
 - ブランチ名は `feat/<issue番号>-<短い英語>`、`fix/…`、`chore/…`。
-- コミットメッセージは英語の命令形。issue・PR・README・画面の文言は日本語。コード内のコメントは英語。
+- コミットメッセージは英語の命令形。issue・PR・画面の文言は日本語。READMEは英語の `README.md` を正とし、同じ内容の日本語版を `README.ja.md` に置く。片方を変えたらもう片方も直す。コード内のコメントは英語。
 - PR本文は最大5行程度。背景とやったことを書き、`Closes #n` を付ける。コードを読めば分かること(ファイルの一覧、実装の説明、テストの件数)は書かない。
 - コメントには「なぜそうしているか」だけを書く。コードを読めば分かることは書かない。
 
@@ -72,6 +72,7 @@ test/e2e/*.e2e.mjs   実機テスト。1ファイルが1回のChrome起動
 scripts/setup.sh     実機テストの準備
 scripts/package.mjs  配布するファイルを dist/yadokari/ に集める。リリース時にCIがzipにする
 scripts/next-version.sh  最新のタグから次のバージョンを決める
+scripts/screenshots.mjs  READMEに載せる画像 docs/bar.png を撮り直す(`npm run screenshots`、Linux専用)
 .claude/settings.json  検証コマンドの許可と、セッション開始時の準備
 .claude/skills/        このリポジトリ用のスキル(並列実装の指揮)
 ```

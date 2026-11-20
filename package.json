@@ -1,7 +1,7 @@
 {
   "name": "yadokari",
   "private": true,
-  "description": "Arcの使い勝手をChromeに持ち込む個人用拡張機能",
+  "description": "Chromeにコマンドバーとタブの自動クローズを足す個人用拡張機能",
   "type": "module",
   "scripts": {
     "setup": "bash scripts/setup.sh",

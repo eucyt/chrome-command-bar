@@ -4,7 +4,7 @@
 
 # Yadokari
 
-**Arcのコマンドバーとタブの自動アーカイブを、Chromeで使う拡張機能。**
+**Chromeにコマンドバーとタブの自動アーカイブを足す拡張機能。**
 
 [![test](https://github.com/eucyt/yadokari/actions/workflows/test.yml/badge.svg)](https://github.com/eucyt/yadokari/actions/workflows/test.yml)
 [![release](https://img.shields.io/github/v/release/eucyt/yadokari)](https://github.com/eucyt/yadokari/releases/latest)
@@ -18,14 +18,14 @@
 
 </div>
 
-名前はヤドカリから取りました。ArcからChromeに移ったので、Arcでの習慣を新しい殻に持ち込みます。
+名前はヤドカリから取りました。Chromeを殻に見立てて、住みやすくする道具を持ち込みます。
 
 ## 機能
 
-| Arc | Yadokari |
+| 機能 | 内容 |
 |---|---|
-| ⌘Tのコマンドバー | タブ、ブックマーク、履歴、最近閉じたタブを1つの入力欄から曖昧検索します。`>` で始めると、タブの複製、ピン留め、URLのコピーなどのコマンドを探せます。 |
-| 使っていないタブのアーカイブ | 12時間使っていないタブを閉じ、アーカイブに30日間残します。ピン留めしたタブ、表示中のタブ、音声を再生中のタブは閉じません。 |
+| コマンドバー | タブ、ブックマーク、履歴、最近閉じたタブを1つの入力欄から曖昧検索します。`>` で始めると、タブの複製、ピン留め、URLのコピーなどのコマンドを探せます。 |
+| タブの自動クローズ | 12時間使っていないタブを閉じ、アーカイブに30日間残します。ピン留めしたタブ、表示中のタブ、音声を再生中のタブは閉じません。 |
 
 ## インストール
 

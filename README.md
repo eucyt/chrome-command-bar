@@ -4,7 +4,7 @@
 
 # Yadokari
 
-**Arc's command bar and tab archiving, for Chrome.**
+**A command bar and automatic tab archiving for Chrome.**
 
 [![test](https://github.com/eucyt/yadokari/actions/workflows/test.yml/badge.svg)](https://github.com/eucyt/yadokari/actions/workflows/test.yml)
 [![release](https://img.shields.io/github/v/release/eucyt/yadokari)](https://github.com/eucyt/yadokari/releases/latest)
@@ -18,14 +18,14 @@ English | [日本語](README.ja.md)
 
 </div>
 
-*Yadokari* is Japanese for hermit crab. I moved from Arc to Chrome and wanted to bring my habits into the new shell.
+*Yadokari* is Japanese for hermit crab. Chrome is the shell, and this is what I carried in to make it home.
 
 ## Features
 
-| Arc | Yadokari |
+| Feature | What it does |
 |---|---|
-| ⌘T command bar | One input that fuzzy-searches tabs, bookmarks, history and recently closed tabs. Type `>` for commands such as duplicate, pin and copy URL. |
-| Archiving inactive tabs | Tabs unused for 12 hours are closed and kept in a searchable archive for 30 days. Pinned, visible and audible tabs are left alone. |
+| Command bar | One input that fuzzy-searches tabs, bookmarks, history and recently closed tabs. Type `>` for commands such as duplicate, pin and copy URL. |
+| Tab auto-close | Tabs unused for 12 hours are closed and kept in a searchable archive for 30 days. Pinned, visible and audible tabs are left alone. |
 
 The interface is in Japanese for now.
 

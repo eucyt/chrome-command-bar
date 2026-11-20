@@ -374,7 +374,9 @@ function bindEvents() {
     });
   }
   if (mode === 'window') {
-    window.addEventListener('blur', () => close());
+    // A window that has just opened can lose the keyboard and get it straight
+    // back; only a blur that lasts closes it.
+    window.addEventListener('blur', () => setTimeout(() => !document.hasFocus() && close(), 150));
   }
   if (mode !== 'overlay') {
     // The shortcut was pressed again; the page under an overlay removes that one itself.

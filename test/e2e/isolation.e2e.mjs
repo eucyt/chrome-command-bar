@@ -1,10 +1,8 @@
 // The bar against hostile or awkward pages: nothing leaks in, nothing renders
 // for a page that embeds it, and page styles cannot break it.
 
-import { execFileSync } from 'node:child_process';
-
 import { PAGES, barDriver } from './bar.mjs';
-import { expect, finish, launch, screenshot, serve, sleep, step, typeGlobal, waitFor } from './harness.mjs';
+import { expect, finish, launch, pixelAt, screenshot, serve, sleep, step, typeGlobal, waitFor } from './harness.mjs';
 
 const site = await serve({
   ...PAGES,
@@ -28,13 +26,6 @@ const { barFrame, waitClosed, openBar, type, key, overlayId } = barDriver(chrome
 
 const alpha = (await browser.pages())[0];
 await alpha.goto(`${origin}/alpha`);
-
-/** RGB of one pixel of the page as rendered, frames included. */
-async function pixelAt(page, x, y) {
-  const png = await page.screenshot({ clip: { x, y, width: 4, height: 4 }, encoding: 'base64' });
-  const script = 'import sys,base64,io,json\nfrom PIL import Image\nim=Image.open(io.BytesIO(base64.b64decode(sys.stdin.read()))).convert("RGB")\nprint(json.dumps(im.getpixel((1,1))))';
-  return JSON.parse(execFileSync('python3', ['-c', script], { input: png }).toString());
-}
 
 await step('page titles are shown as text, never parsed as HTML', async () => {
   const xss = await browser.newPage();

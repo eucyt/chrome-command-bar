@@ -199,7 +199,10 @@ await step('"URLをコピー" puts the page URL on the clipboard', async () => {
   await waitClosed(alpha);
   await alpha.bringToFront();
   await alpha.focus('#page-input');
-  const clip = await alpha.evaluate(() => navigator.clipboard.readText());
+  // Chrome hands a page an empty string until it agrees the page has the
+  // keyboard, which can trail the bar closing by a moment.
+  let clip;
+  await waitFor(async () => (clip = await alpha.evaluate(() => navigator.clipboard.readText())) === `${origin}/alpha`, 'the URL on the clipboard', 3000).catch(() => {});
   expect(clip === `${origin}/alpha`, `clipboard was "${clip}"`);
 });
 

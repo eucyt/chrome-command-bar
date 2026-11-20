@@ -3,6 +3,7 @@
 
 import { watchTabs } from './autoclose.js';
 import { watchSources } from './index-cache.js';
+import { fallbackWindowBounds } from './lib/window.js';
 
 const BAR_PAGE = 'src/bar.html';
 const NONCE_PREFIX = 'nonce:';
@@ -47,6 +48,7 @@ async function toggleBar(tab) {
       args: [`${chrome.runtime.getURL(BAR_PAGE)}?mode=overlay#${nonce}`],
     });
     if (injection?.result !== 'opened') await chrome.storage.session.remove(key);
+    if (injection?.result === 'blocked') await openFallback(tab);
   } catch (error) {
     // Expected on chrome:// pages, the Web Store and the like.
     console.info('[yadokari] cannot inject into this page, using the popup:', error?.message ?? error);
@@ -81,14 +83,11 @@ async function openFallback(tab) {
     // openPopup refuses when the window is not focused or a popup is already open.
   }
   const parent = tab?.windowId ? await chrome.windows.get(tab.windowId).catch(() => null) : null;
-  const left = parent ? Math.round(parent.left + (parent.width - WINDOW_SIZE.width) / 2) : undefined;
-  const top = parent ? Math.round(parent.top + Math.max(80, (parent.height - WINDOW_SIZE.height) / 4)) : undefined;
   await chrome.windows.create({
     url: `${chrome.runtime.getURL(BAR_PAGE)}?mode=window${tab?.id ? `&tabId=${tab.id}` : ''}`,
     type: 'popup',
     focused: true,
-    ...WINDOW_SIZE,
-    ...(parent ? { left, top } : {}),
+    ...fallbackWindowBounds(parent, WINDOW_SIZE),
   });
 }
 
@@ -96,7 +95,7 @@ async function openFallback(tab) {
  * Runs inside the page (isolated world). Inserts the bar as a full-viewport
  * iframe pointing at an extension page, so the page itself can read neither
  * what is typed nor the results.
- * @returns {'opened' | 'closed'}
+ * @returns {'opened' | 'closed' | 'blocked'}
  */
 function toggleOverlay(src) {
   const ID = 'yadokari-overlay';
@@ -106,6 +105,9 @@ function toggleOverlay(src) {
     else existing.remove();
     return 'closed';
   }
+  // A modal dialog makes everything outside it inert: a bar drawn here could
+  // be seen but not typed into.
+  if (document.querySelector('dialog:modal')) return 'blocked';
 
   const frame = document.createElement('iframe');
   frame.id = ID;
@@ -148,7 +150,16 @@ function toggleOverlay(src) {
   window.addEventListener('message', onMessage);
   frame.addEventListener('load', () => frame.focus({ preventScroll: true }));
 
-  document.documentElement.appendChild(frame);
+  // z-index cannot rise above a fullscreen element; only the top layer can.
+  // Chrome also makes everything outside that element inert, so the frame goes
+  // inside it where it can hold children. Over a fullscreen <video> the bar
+  // still shows and takes keys, but not the mouse.
+  const fullscreen = document.fullscreenElement;
+  const childless = ['video', 'iframe', 'img', 'canvas', 'embed', 'object'];
+  const host = fullscreen && !fullscreen.shadowRoot && !childless.includes(fullscreen.localName) ? fullscreen : document.documentElement;
+  frame.popover = 'manual';
+  host.appendChild(frame);
+  frame.showPopover();
   frame.focus({ preventScroll: true });
   return 'opened';
 }

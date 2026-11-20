@@ -64,6 +64,13 @@ export function screenshot(name) {
   return file;
 }
 
+/** RGB of one pixel of the page as rendered, frames included. */
+export async function pixelAt(page, x, y) {
+  const png = await page.screenshot({ clip: { x, y, width: 4, height: 4 }, encoding: 'base64' });
+  const script = 'import sys,base64,io,json\nfrom PIL import Image\nim=Image.open(io.BytesIO(base64.b64decode(sys.stdin.read()))).convert("RGB")\nprint(json.dumps(im.getpixel((1,1))))';
+  return JSON.parse(execFileSync('python3', ['-c', script], { input: png }).toString());
+}
+
 /**
  * Serves throwaway pages on localhost.
  * @param {Record<string, {title: string, body?: string, head?: string}>} pages keyed by path

@@ -1,6 +1,6 @@
-// The bar UI. Runs as an extension page in four places: an iframe over a web
-// page ("overlay"), the toolbar popup ("popup"), a small fallback window
-// ("window") and the new tab page ("newtab").
+// The bar UI. Runs as an extension page in three places: an iframe over a web
+// page ("overlay"), the toolbar popup ("popup") and a small fallback window
+// ("window").
 
 import { forgetArchived, loadArchive, loadSettings } from './autoclose.js';
 import { availableCommands, findCommand } from './commands.js';
@@ -28,7 +28,7 @@ const backdrop = document.getElementById('backdrop');
 const panel = document.getElementById('panel');
 
 const OWN_ORIGIN = chrome.runtime.getURL('');
-/** Empty new tabs (ours or Chrome's) are not worth listing as places to go. */
+/** Empty new tabs and this extension's own pages are not worth listing as places to go. */
 const isBlankTab = (url) => !url || url.startsWith(OWN_ORIGIN) || url.startsWith('chrome://newtab');
 
 const TYPE_LABEL = { tab: 'タブ', closed: '最近閉じた', archived: 'アーカイブ', bookmark: 'ブックマーク', history: '履歴', command: 'コマンド' };
@@ -116,10 +116,6 @@ async function resolveContext() {
     state.contextTab = tabId ? await chrome.tabs.get(tabId).catch(() => null) : null;
     return true;
   }
-  if (mode === 'newtab') {
-    state.contextTab = (await chrome.tabs.getCurrent()) ?? null;
-    return true;
-  }
   const [active] = await chrome.tabs.query({ active: true, currentWindow: true });
   state.contextTab = active ?? null;
   return true;
@@ -159,7 +155,7 @@ function loadHistory() {
 
 function rebuild() {
   if (state.view !== 'all') return;
-  const ctx = { tab: mode === 'newtab' ? null : state.contextTab, autoClose: state.autoClose };
+  const ctx = { tab: state.contextTab, autoClose: state.autoClose };
   state.items = buildIndex({
     ...state.sources,
     commands: availableCommands(ctx),
@@ -319,7 +315,7 @@ function move(delta) {
 }
 
 function renderOrigin() {
-  if (mode === 'newtab' || !state.contextTab?.url) {
+  if (!state.contextTab?.url) {
     originEl.textContent = '';
     return;
   }
@@ -454,11 +450,11 @@ async function activate({ inCurrentTab = false } = {}) {
     if (item.type === 'tab') {
       await chrome.tabs.update(item.tabId, { active: true });
       await chrome.windows.update(item.windowId, { focused: true });
-      return await finish({ leftThisTab: true });
+      return close();
     }
     if (item.type === 'closed') {
       await chrome.sessions.restore(item.sessionId);
-      return await finish({ leftThisTab: true });
+      return close();
     }
     if (item.type === 'archived') {
       await forgetArchived(item.url);
@@ -468,12 +464,12 @@ async function activate({ inCurrentTab = false } = {}) {
       const command = findCommand(item.commandId);
       if (command?.view === 'archive') return await showArchive();
       await command?.run({ tab: state.contextTab });
-      return await finish({ leftThisTab: false });
+      return close();
     }
     return await openUrl(item.url, inCurrentTab);
   } catch (error) {
     console.error(`[yadokari] action failed: ${error?.name ?? ''} ${error?.message ?? error}`);
-    await finish({ leftThisTab: false });
+    close();
   }
 }
 
@@ -490,43 +486,26 @@ async function showArchive() {
 
 async function openUrl(url, inCurrentTab) {
   const ctx = state.contextTab;
-  if (ctx && (mode === 'newtab' || inCurrentTab)) {
+  if (ctx && inCurrentTab) {
     await chrome.tabs.update(ctx.id, { url });
-    return finish({ leftThisTab: false });
+    return close();
   }
   await chrome.tabs.create(
     ctx ? { url, windowId: ctx.windowId, index: ctx.index + 1, openerTabId: ctx.id } : { url },
   );
-  return finish({ leftThisTab: false });
+  return close();
 }
 
 async function webSearch(text) {
   if (!text) return;
-  const ctx = state.contextTab;
-  if (mode === 'newtab' && ctx) {
-    await chrome.search.query({ text, tabId: ctx.id });
-    return finish({ leftThisTab: false });
-  }
   await chrome.search.query({ text, disposition: 'NEW_TAB' });
-  return finish({ leftThisTab: false });
-}
-
-/** Called after an action ran. On the new tab page, a tab we navigated away from is closed. */
-async function finish({ leftThisTab }) {
-  if (mode === 'newtab') {
-    if (leftThisTab && state.contextTab) await chrome.tabs.remove(state.contextTab.id).catch(() => {});
-    return;
-  }
-  close();
+  return close();
 }
 
 function close() {
   if (mode === 'overlay') {
     window.parent.postMessage({ type: 'yadokari:close' }, '*');
-  } else if (mode !== 'newtab') {
-    window.close();
   } else {
-    input.value = '';
-    update();
+    window.close();
   }
 }

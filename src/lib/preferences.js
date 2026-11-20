@@ -6,7 +6,6 @@
  * @property {number} historyMax how many history entries are read at most
  * @property {number} closedCount recently closed tabs listed before anything is typed
  * @property {'newTab' | 'currentTab'} openIn where Enter opens a page; the modifier key gives the other one
- * @property {boolean} newtabFocus reload the new tab page once so that its input gets the cursor
  */
 
 /** @type {Readonly<Preferences>} */
@@ -15,7 +14,6 @@ export const DEFAULTS = Object.freeze({
   historyMax: 4000,
   closedCount: 5,
   openIn: 'newTab',
-  newtabFocus: true,
 });
 
 /** Chrome keeps at most 25 closed sessions, so asking for more would promise rows that never come. */
@@ -42,7 +40,6 @@ export function normalizePreferences(stored) {
     historyMax: clampInt(stored?.historyMax, DEFAULTS.historyMax, LIMITS.historyMax),
     closedCount: clampInt(stored?.closedCount, DEFAULTS.closedCount, LIMITS.closedCount),
     openIn: stored?.openIn === 'currentTab' ? 'currentTab' : DEFAULTS.openIn,
-    newtabFocus: stored?.newtabFocus !== false,
   };
 }
 

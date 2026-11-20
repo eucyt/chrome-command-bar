@@ -27,10 +27,11 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 
 /**
  * Shows the bar over the given tab, or removes it when it is already there.
- * Pages Chrome does not let extensions touch (chrome://, the Web Store, the
+ * Pressing the shortcut never leaves two bars on screen. Pages Chrome does not let extensions touch (chrome://, the Web Store, the
  * new tab page) get the toolbar popup instead.
  */
 async function toggleBar(tab) {
+  if (await closeFallback()) return;
   tab ??= (await chrome.tabs.query({ active: true, lastFocusedWindow: true }))[0];
   if (!tab?.id) return openFallback(tab);
 
@@ -52,6 +53,24 @@ async function toggleBar(tab) {
     await chrome.storage.session.remove(key);
     await openFallback(tab);
   }
+}
+
+/**
+ * Closes the bar when it is showing as the popup or the small window. Without
+ * this, a second press would stack a new window on top: openPopup() refuses
+ * while the popup is open, and the small window is itself a page that cannot
+ * be injected into.
+ * @returns {Promise<boolean>} whether such a bar was showing
+ */
+async function closeFallback() {
+  const contexts = await chrome.runtime.getContexts({ contextTypes: ['POPUP', 'TAB'] });
+  const showing = contexts.some((context) => {
+    if (!context.documentUrl?.startsWith(chrome.runtime.getURL(BAR_PAGE))) return false;
+    return ['popup', 'window'].includes(new URL(context.documentUrl).searchParams.get('mode') ?? 'popup');
+  });
+  // Rejects when the bar has not loaded far enough to listen; it stays open then.
+  if (showing) await chrome.runtime.sendMessage({ type: 'yadokari:close' }).catch(() => {});
+  return showing;
 }
 
 async function openFallback(tab) {

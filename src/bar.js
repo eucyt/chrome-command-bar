@@ -376,6 +376,12 @@ function bindEvents() {
   if (mode === 'window') {
     window.addEventListener('blur', () => close());
   }
+  if (mode !== 'overlay') {
+    // The shortcut was pressed again; the page under an overlay removes that one itself.
+    chrome.runtime.onMessage.addListener((message) => {
+      if (message?.type === 'yadokari:close') close();
+    });
+  }
 }
 
 function onKeyDown(event) {

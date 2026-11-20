@@ -14,7 +14,10 @@
 
 English | [日本語](README.ja.md)
 
-<img src="docs/bar.png" width="800" alt="The command bar open over a web page, listing a tab, a bookmark and a recently closed tab that match the query">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/bar-dark.png">
+  <img src="docs/bar.png" width="800" alt="The command bar over a blurred web page, listing open tabs, a bookmark, a recently closed tab and a history entry that match the query">
+</picture>
 
 </div>
 
@@ -64,6 +67,8 @@ With an empty input the bar lists your other tabs, most recent first, so ⌃T th
 - Input that looks like a URL (`github.com`, `localhost:3000`) gets an "open this URL" row at the top.
 - When nothing matches, the bar retries allowing one typo: a dropped letter or two swapped neighbours.
 - The footer shows the host of the page under the bar, in a warning colour when the page is not HTTPS.
+- The footer also says what Enter does to the selected row, and which other keys work on it.
+- The bar follows the system's light or dark appearance. Over a page it blurs the page behind it, unless the system is set to reduce transparency.
 
 </details>
 
@@ -127,7 +132,7 @@ Open them from the extension's options, or run "Yadokariの設定を開く" from
 npm test            # unit tests and guardrails, nothing to install
 npm run setup       # prepare the end-to-end tests (Linux only)
 npm run check       # unit tests, then end-to-end tests in a real Chrome
-npm run screenshots # retake docs/bar.png
+npm run screenshots # retake docs/bar.png and docs/bar-dark.png
 ```
 
 Project rules and layout are in [CLAUDE.md](CLAUDE.md), in Japanese.

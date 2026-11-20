@@ -51,6 +51,9 @@ export function barDriver(chrome) {
       })),
     );
 
+  /** The footer's key hints as their labels, what Enter does first. */
+  const hints = (frame) => frame.$$eval('#hints .hint .label', (els) => els.map((el) => el.textContent));
+
   /** Sets the query, Japanese included. Real typing is covered separately with typeGlobal(). */
   async function type(frame, text) {
     await frame.focus('#query');
@@ -72,5 +75,5 @@ export function barDriver(chrome) {
       init,
     );
 
-  return { barFrame, overlayPresent, waitClosed, openBar, rows, type, key, overlayId: OVERLAY_ID };
+  return { barFrame, overlayPresent, waitClosed, openBar, rows, hints, type, key, overlayId: OVERLAY_ID };
 }

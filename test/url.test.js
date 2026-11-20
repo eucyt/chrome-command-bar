@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { dedupeKey, describeOrigin, isOpenable, matchableUrl, toUrl } from '../src/lib/url.js';
+import { dedupeKey, describeOrigin, hostLength, isOpenable, matchableUrl, toUrl } from '../src/lib/url.js';
 
 test('toUrl keeps explicit URLs', () => {
   assert.equal(toUrl('https://example.com/a?b=1'), 'https://example.com/a?b=1');
@@ -66,4 +66,23 @@ test('describeOrigin flags plain http and shows punycode for lookalike hosts', (
 test('isOpenable rejects bookmarklets', () => {
   assert.equal(isOpenable('javascript:void(0)'), false);
   assert.equal(isOpenable('https://example.com'), true);
+});
+
+test('hostLength finds where the path starts in a matchable URL', () => {
+  assert.equal(hostLength('github.com/octo/repo'), 'github.com'.length);
+  assert.equal(hostLength('localhost:3000?q=1'), 'localhost:3000'.length);
+  assert.equal(hostLength('example.com#top'), 'example.com'.length);
+  assert.equal(hostLength('example.com'), 'example.com'.length);
+  assert.equal(hostLength(''), 0);
+});
+
+test('hostLength counts code points, as match positions do', () => {
+  assert.equal(hostLength('𝒳.example/a'), Array.from('𝒳.example').length);
+  assert.equal(hostLength('例え.jp/パス'), 5);
+});
+
+test('hostLength leaves text that still has a scheme whole', () => {
+  assert.equal(hostLength('chrome://extensions/shortcuts'), 'chrome://extensions/shortcuts'.length);
+  assert.equal(hostLength('file:///Users/me/a.html'), 'file:///Users/me/a.html'.length);
+  assert.equal(hostLength('about:blank'), 'about:blank'.length);
 });

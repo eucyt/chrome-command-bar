@@ -6,10 +6,11 @@ import { forgetArchived, loadArchive, loadSettings } from './autoclose.js';
 import { availableCommands, findCommand } from './commands.js';
 import { readIndexCache, writeIndexCache } from './index-cache.js';
 import { MAX_TEXT_LENGTH } from './lib/fuzzy.js';
+import { footerHints } from './lib/hints.js';
 import { isFresh, makeCache } from './lib/index-cache.js';
 import { DEFAULTS, opensInCurrentTab } from './lib/preferences.js';
 import { buildArchiveIndex, buildIndex, defaultResults, search } from './lib/rank.js';
-import { dedupeKey, describeOrigin, toUrl } from './lib/url.js';
+import { dedupeKey, describeOrigin, hostLength, toUrl } from './lib/url.js';
 import { loadPreferences } from './preferences.js';
 
 const RESULT_LIMIT = 50;
@@ -24,6 +25,9 @@ const params = new URLSearchParams(location.search);
 const input = /** @type {HTMLInputElement} */ (document.getElementById('query'));
 const list = document.getElementById('results');
 const originEl = document.getElementById('origin');
+const hintsEl = document.getElementById('hints');
+const promptEl = document.getElementById('prompt');
+const scopeEl = document.getElementById('scope');
 const backdrop = document.getElementById('backdrop');
 const panel = document.getElementById('panel');
 
@@ -32,6 +36,12 @@ const OWN_ORIGIN = chrome.runtime.getURL('');
 const isBlankTab = (url) => !url || url.startsWith(OWN_ORIGIN) || url.startsWith('chrome://newtab');
 
 const TYPE_LABEL = { tab: 'タブ', closed: '最近閉じた', archived: 'アーカイブ', bookmark: 'ブックマーク', history: '履歴', command: 'コマンド' };
+const TYPE_ICON = { tab: 'tab', closed: 'undo', archived: 'archive', bookmark: 'bookmark', history: 'clock', command: 'command' };
+const SECTION_LABEL = { tab: '開いているタブ', closed: '最近閉じたタブ' };
+const PROMPT_ICON = { all: 'shell', command: 'command', archive: 'archive' };
+/** Keys drawn as icons, so they look the same whatever symbols the system font has. */
+const KEY_ICON = { '↵': 'k-return', '⇧': 'k-shift', '⌃': 'k-ctrl', '⌥': 'k-opt', '⌫': 'k-delete' };
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const state = {
   /** @type {chrome.tabs.Tab | null} */
@@ -48,6 +58,8 @@ const state = {
   /** @type {import('./lib/preferences.js').Preferences} */
   prefs: DEFAULTS,
   selected: 0,
+  /** @type {'all' | 'command' | 'archive' | null} */
+  scope: null,
   /** @type {string | null} last pointer position seen over the list */
   pointerAt: null,
 };
@@ -61,7 +73,7 @@ async function main() {
     return;
   }
   state.prefs = prefs;
-  localizeHints();
+  renderScope('all', false);
   renderOrigin();
   bindEvents();
   input.focus();
@@ -190,46 +202,95 @@ function update({ keepSelection = false } = {}) {
 
   state.rows = rows;
   state.selected = keepSelection ? Math.min(state.selected, Math.max(0, rows.length - 1)) : 0;
+  renderScope(state.view === 'archive' ? 'archive' : trimmed.startsWith('>') ? 'command' : 'all', Boolean(trimmed));
   render();
+}
+
+/** The icon at the start of the input, and the label beside it, say what is being searched. */
+function renderScope(scope, typed) {
+  const root = document.documentElement;
+  root.dataset.typed = String(typed);
+  if (scope === state.scope) return;
+  state.scope = scope;
+  root.dataset.scope = scope;
+  promptEl.replaceChildren(glyph(PROMPT_ICON[scope]));
+  scopeEl.hidden = scope !== 'archive';
+  scopeEl.textContent = 'アーカイブ';
 }
 
 function render() {
   const fragment = document.createDocumentFragment();
-  state.rows.forEach((row, index) => fragment.appendChild(renderRow(row, index)));
+  // Before anything is typed the rows come grouped by type, so the groups can be named.
+  const grouped = state.view === 'all' && !input.value.trim();
+  let lastType = null;
+  state.rows.forEach((row, index) => {
+    const type = row.item?.type;
+    if (grouped && type !== lastType && SECTION_LABEL[type]) {
+      const label = el('li', 'section');
+      label.setAttribute('role', 'presentation');
+      label.textContent = SECTION_LABEL[type];
+      fragment.appendChild(label);
+    }
+    lastType = type;
+    fragment.appendChild(renderRow(row, index));
+  });
   list.replaceChildren(fragment);
+  list.dataset.grouped = String(grouped);
   applySelection();
 }
 
+function el(tag, className) {
+  const node = document.createElement(tag);
+  node.className = className;
+  return node;
+}
+
+/** One of the icons in bar.html. It takes the colour of the text around it. */
+function glyph(name) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'glyph');
+  svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS(SVG_NS, 'use');
+  use.setAttribute('href', `#i-${name}`);
+  svg.appendChild(use);
+  return svg;
+}
+
+function keycap(key) {
+  const kbd = document.createElement('kbd');
+  if (KEY_ICON[key]) {
+    kbd.appendChild(glyph(KEY_ICON[key]));
+    kbd.setAttribute('aria-label', key);
+  } else {
+    kbd.textContent = key;
+  }
+  return kbd;
+}
+
 function renderRow(row, index) {
-  const li = document.createElement('li');
-  li.className = 'row';
+  const li = el('li', 'row');
   li.id = `row-${index}`;
   li.setAttribute('role', 'option');
   li.dataset.index = String(index);
 
-  const icon = document.createElement('span');
-  icon.className = 'icon';
-  const text = document.createElement('div');
-  text.className = 'text';
-  const title = document.createElement('div');
-  title.className = 'title';
-  const sub = document.createElement('div');
-  sub.className = 'sub';
-  const badge = document.createElement('span');
-  badge.className = 'badge';
+  const icon = el('span', 'icon');
+  const text = el('div', 'text');
+  const title = el('div', 'title');
+  const sub = el('div', 'sub');
+  const badge = el('span', 'badge');
 
   if (row.kind === 'empty') {
     li.dataset.type = 'empty';
     title.textContent = row.text;
   } else if (row.kind === 'url') {
     li.dataset.type = 'url';
-    icon.textContent = '↗';
+    icon.appendChild(glyph('arrow'));
     title.textContent = row.url;
     sub.textContent = 'このURLを開く';
     badge.textContent = 'URL';
   } else if (row.kind === 'search') {
     li.dataset.type = 'search';
-    icon.textContent = '⌕';
+    icon.appendChild(glyph('search'));
     title.textContent = row.text;
     sub.textContent = '既定の検索エンジンで検索';
     badge.textContent = 'Web検索';
@@ -237,20 +298,33 @@ function renderRow(row, index) {
     const item = row.item;
     li.dataset.type = item.type;
     if (item.type === 'command') {
-      icon.textContent = '›';
+      icon.appendChild(glyph(findCommand(item.commandId)?.icon ?? 'command'));
       title.append(...highlight(item.title, row.titlePositions));
     } else {
       icon.appendChild(favicon(item.url));
       title.append(...highlight(item.title, row.titlePositions));
-      sub.append(...highlight(item.matchUrl, row.urlPositions));
+      sub.append(...urlParts(item.matchUrl, row.urlPositions));
     }
-    badge.textContent = item.isContext ? '現在のタブ' : TYPE_LABEL[item.type];
+    if (item.isContext) li.dataset.context = 'true';
+    badge.append(glyph(TYPE_ICON[item.type]), document.createTextNode(item.isContext ? '現在のタブ' : TYPE_LABEL[item.type]));
   }
 
   text.appendChild(title);
   if (sub.childNodes.length) text.appendChild(sub);
   li.append(icon, text, badge);
   return li;
+}
+
+/** The host and the rest of a URL as two spans, so the host reads first. */
+function urlParts(text, positions = []) {
+  const chars = Array.from(String(text ?? ''));
+  const split = hostLength(text);
+  const host = el('span', 'host');
+  host.append(...highlight(chars.slice(0, split).join(''), positions.filter((p) => p < split)));
+  if (split === chars.length) return [host];
+  const path = el('span', 'path');
+  path.append(...highlight(chars.slice(split).join(''), positions.filter((p) => p >= split).map((p) => p - split)));
+  return [host, path];
 }
 
 /**
@@ -296,15 +370,23 @@ function favicon(pageUrl) {
 }
 
 function applySelection() {
-  const rows = list.children;
+  const rows = list.querySelectorAll('.row');
   for (let i = 0; i < rows.length; i++) rows[i].setAttribute('aria-selected', String(i === state.selected));
   const active = rows[state.selected];
   if (active) {
     input.setAttribute('aria-activedescendant', active.id);
-    active.scrollIntoView({ block: 'nearest' });
+    // The first row brings its section label back into view with it.
+    (state.selected === 0 ? list.firstElementChild : active).scrollIntoView({ block: 'nearest' });
   } else {
     input.removeAttribute('aria-activedescendant');
   }
+  markOverflow();
+  renderHints();
+}
+
+/** Lets the list fade out at the bottom only while there is more to scroll to. */
+function markOverflow() {
+  list.dataset.more = String(list.scrollTop + list.clientHeight < list.scrollHeight - 1);
 }
 
 function move(delta) {
@@ -316,27 +398,46 @@ function move(delta) {
 
 function renderOrigin() {
   if (!state.contextTab?.url) {
-    originEl.textContent = '';
+    originEl.replaceChildren();
     return;
   }
   const info = describeOrigin(state.contextTab.url);
   originEl.dataset.secure = String(info.secure);
   const isHttps = state.contextTab.url.startsWith('https:');
-  originEl.textContent =
-    info.kind !== 'web' ? info.label : info.secure ? `${isHttps ? '🔒 ' : ''}${info.label}` : `⚠ ${info.label}（暗号化なし）`;
+  const label = el('span', 'origin-label');
+  label.textContent = info.kind === 'web' && !info.secure ? `${info.label}（暗号化なし）` : info.label;
+  const mark = info.kind !== 'web' ? 'info' : !info.secure ? 'warn' : isHttps ? 'lock' : 'info';
+  originEl.replaceChildren(glyph(mark), label);
 }
 
-function localizeHints() {
-  if (state.prefs.openIn === 'currentTab') {
-    for (const el of document.querySelectorAll('.alt-action')) el.textContent = '新しいタブで開く';
-  }
-  if (isMac) return;
-  for (const el of document.querySelectorAll('.alt-key')) el.textContent = 'Alt ↵';
+/** The footer says what the keys do to the row that is selected right now. */
+function renderHints() {
+  const row = state.rows[state.selected];
+  const hints = footerHints({
+    row: row ? { type: row.kind === 'item' ? row.item.type : row.kind, isContext: Boolean(row.item?.isContext) } : null,
+    scope: state.scope ?? 'all',
+    typed: Boolean(input.value.trim()),
+    openIn: state.prefs.openIn,
+    mac: isMac,
+  });
+  hintsEl.replaceChildren(
+    ...hints.map((hint) => {
+      const node = el('span', 'hint');
+      if (hint.primary) node.dataset.primary = 'true';
+      const keys = el('span', 'keys');
+      keys.append(...hint.keys.map(keycap));
+      const label = el('span', 'label');
+      label.textContent = hint.label;
+      node.append(keys, label);
+      return node;
+    }),
+  );
 }
 
 function bindEvents() {
   input.addEventListener('input', () => update());
   input.addEventListener('keydown', onKeyDown);
+  list.addEventListener('scroll', markOverflow, { passive: true });
   window.addEventListener('focus', () => input.focus());
 
   list.addEventListener('mousemove', (event) => {

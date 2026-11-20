@@ -72,7 +72,7 @@ test/e2e/*.e2e.mjs   実機テスト。1ファイルが1回のChrome起動
 scripts/setup.sh     実機テストの準備
 scripts/package.mjs  配布するファイルを dist/yadokari/ に集める。リリース時にCIがzipにする
 scripts/next-version.sh  最新のタグから次のバージョンを決める
-scripts/screenshots.mjs  READMEに載せる画像 docs/bar.png を撮り直す(`npm run screenshots`、Linux専用)
+scripts/screenshots.mjs  READMEに載せる画像 docs/bar.png と docs/bar-dark.png を撮り直す(`npm run screenshots`、Linux専用)
 .claude/settings.json  検証コマンドの許可と、セッション開始時の準備
 .claude/skills/        このリポジトリ用のスキル(並列実装の指揮)
 ```

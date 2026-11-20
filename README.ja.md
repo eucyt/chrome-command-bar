@@ -14,7 +14,10 @@
 
 [English](README.md) | 日本語
 
-<img src="docs/bar.png" width="800" alt="Webページの上に開いたコマンドバー。入力に一致するタブ、ブックマーク、最近閉じたタブが並んでいる">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/bar-dark.png">
+  <img src="docs/bar.png" width="800" alt="ぼかしたWebページの上に開いたコマンドバー。入力に一致する開いているタブ、ブックマーク、最近閉じたタブ、履歴が並んでいる">
+</picture>
 
 </div>
 
@@ -62,6 +65,8 @@ WindowsとLinuxでは⌥がAltに、タブを閉じるキーがAlt+⌫に変わ�
 - URLらしい入力(`github.com`、`localhost:3000`)には、先頭に「このURLを開く」が出ます。
 - 一致が0件のときは、1文字の脱字か隣同士の入れ替えを許して探し直します。
 - フッターには、バーを開いたページのホスト名が出ます。HTTPSでないページでは警告色になります。
+- フッターには、選択中の行でEnterを押すと何が起きるかと、その行で使えるほかのキーも出ます。
+- バーの配色はシステムのライト・ダークに従います。ページの上に開くと背後のページをぼかします。システムで透明度を下げる設定にしているときはぼかしません。
 
 </details>
 
@@ -125,7 +130,7 @@ WindowsとLinuxでは⌥がAltに、タブを閉じるキーがAlt+⌫に変わ�
 npm test            # 単体テストとガードレール(依存の導入は不要)
 npm run setup       # 実機テストの準備(Linux専用)
 npm run check       # 単体テストに続けて、本物のChromeで実機テスト
-npm run screenshots # docs/bar.png を撮り直す
+npm run screenshots # docs/bar.png と docs/bar-dark.png を撮り直す
 ```
 
 作業のルールと構成は [CLAUDE.md](CLAUDE.md) にあります。

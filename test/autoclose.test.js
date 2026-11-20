@@ -76,7 +76,7 @@ test('closed tabs go to the front of the archive, one entry per page', () => {
 test('incognito tabs and pages that cannot be reopened are not archived', () => {
   const tabs = [
     tab(1, { incognito: true }),
-    tab(2, { url: 'chrome-extension://abc/src/newtab.html' }),
+    tab(2, { url: 'chrome-extension://abc/src/options.html' }),
     tab(3, { url: 'chrome://newtab/' }),
     tab(4, { url: '' }),
     tab(5, { url: '', pendingUrl: 'https://example.com/pending' }),

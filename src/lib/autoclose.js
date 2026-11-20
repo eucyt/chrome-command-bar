@@ -72,7 +72,7 @@ export function planSweep(tabs, lastUsed, { now, ttl = DEFAULT_TTL, since = 0 })
 
 /**
  * Incognito pages must not be written to disk, some URLs cannot be reopened,
- * and an empty new tab (Chrome's or this extension's) is not worth keeping.
+ * and neither an empty new tab nor one of this extension's own pages is worth keeping.
  */
 function isArchivable(tab, ownOrigin) {
   const url = tab.url || tab.pendingUrl;

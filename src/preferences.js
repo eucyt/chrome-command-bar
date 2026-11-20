@@ -2,7 +2,6 @@
 
 import { normalizePreferences } from './lib/preferences.js';
 
-// mode.js reads this key too; it is a classic script and cannot import it.
 const KEY = 'preferences';
 
 /** @returns {Promise<import('./lib/preferences.js').Preferences>} */

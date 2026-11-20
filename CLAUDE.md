@@ -56,7 +56,6 @@ GitHubの Actions → `release` → Run workflow で、上げる桁(patch / mino
 - **⌘T / Ctrl+T は拡張機能に割り当てられない。** Chromeが予約している。既定のショートカットは macOS が ⌃T、それ以外が Ctrl+Shift+K。
 - **拡張機能のショートカットはブラウザが処理する。** Puppeteerのキーボード操作はページにしか届かず、ショートカットは発火しない(`smoke.e2e.mjs` で確認している)。`activeTab` もユーザーがショートカットを押したときにしか付かない。実機テストでは `pressGlobal()` でXサーバーから本物のキー入力を送る。
 - **挿入できないページがある。** `chrome://`、Chromeウェブストア、新規タブページ、PDFビューア。必ず代替の経路を用意する。
-- **新規タブではフォーカスがアドレスバーに入る。** ページからの `focus()` は効かない。
 - **日本語入力中の Enter・矢印キーはIMEのもの。** `keydown` では `event.isComposing` と `keyCode === 229` を見て無視する。
 - **`iframe` の `color-scheme` が埋め込み先と食い違うと、背景が不透明になる。**
 - **通常版のGoogle Chromeは `--load-extension` を受け付けない。** 実機テストには Chrome for Testing を使う(`CHROME_PATH` で指定)。

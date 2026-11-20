@@ -9,12 +9,12 @@ test('nothing stored gives the defaults', () => {
 });
 
 test('the defaults are the values that used to be constants', () => {
-  assert.deepEqual(DEFAULTS, { historyDays: 90, historyMax: 4000, closedCount: 5, openIn: 'newTab', newtabFocus: true });
+  assert.deepEqual(DEFAULTS, { historyDays: 90, historyMax: 4000, closedCount: 5, openIn: 'newTab' });
 });
 
 test('stored values are kept, numbers typed as text included', () => {
-  const prefs = normalizePreferences({ historyDays: '30', historyMax: 1000, closedCount: 0, openIn: 'currentTab', newtabFocus: false });
-  assert.deepEqual(prefs, { historyDays: 30, historyMax: 1000, closedCount: 0, openIn: 'currentTab', newtabFocus: false });
+  const prefs = normalizePreferences({ historyDays: '30', historyMax: 1000, closedCount: 0, openIn: 'currentTab' });
+  assert.deepEqual(prefs, { historyDays: 30, historyMax: 1000, closedCount: 0, openIn: 'currentTab' });
 });
 
 test('numbers outside the limits are pulled back in and fractions rounded', () => {
@@ -27,11 +27,10 @@ test('numbers outside the limits are pulled back in and fractions rounded', () =
 
 test('an emptied or meaningless field falls back to its default', () => {
   for (const junk of ['', '  ', 'abc', null, NaN, Infinity]) {
-    const prefs = normalizePreferences({ historyDays: junk, closedCount: junk, openIn: junk, newtabFocus: junk });
+    const prefs = normalizePreferences({ historyDays: junk, closedCount: junk, openIn: junk });
     assert.equal(prefs.historyDays, DEFAULTS.historyDays, `historyDays for ${junk}`);
     assert.equal(prefs.closedCount, DEFAULTS.closedCount, `closedCount for ${junk}`);
     assert.equal(prefs.openIn, 'newTab');
-    assert.equal(prefs.newtabFocus, true);
   }
 });
 

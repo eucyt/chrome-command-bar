@@ -33,7 +33,6 @@ const shown = () =>
       historyMax: form.elements.historyMax.value,
       closedCount: form.elements.closedCount.value,
       openIn: form.elements.openIn.value,
-      newtabFocus: form.elements.newtabFocus.checked,
     };
   });
 /** Replaces a number field's content the way a person would: select all, type, leave the field. */
@@ -43,22 +42,13 @@ const fill = async (name, text) => {
   await options.keyboard.type(text);
   await options.keyboard.press('Tab');
 };
-const newtabSearch = async () => {
-  const page = await browser.newPage();
-  await page.goto('chrome://newtab');
-  await page.waitForSelector('#results .row', { timeout: 5000 });
-  await sleep(500);
-  const search = await page.evaluate(() => location.search);
-  await page.close();
-  return search;
-};
 
 let frame;
 
 await step('the page shows the defaults and the current shortcut', async () => {
   await waitFor(async () => (await shown()).historyDays === '90', 'the stored values to be shown');
   const values = await shown();
-  expect(JSON.stringify(values) === JSON.stringify({ historyDays: '90', historyMax: '4000', closedCount: '5', openIn: 'newTab', newtabFocus: true }), `shown: ${JSON.stringify(values)}`);
+  expect(JSON.stringify(values) === JSON.stringify({ historyDays: '90', historyMax: '4000', closedCount: '5', openIn: 'newTab' }), `shown: ${JSON.stringify(values)}`);
   const shortcut = await waitFor(() => options.$eval('#shortcut', (el) => el.textContent), 'the shortcut');
   expect(shortcut === 'Ctrl+Shift+K', `shortcut shown as "${shortcut}"`);
   await sleep(300);
@@ -121,20 +111,11 @@ await step('set to "現在のタブ", Enter reuses the tab and the modifier open
   expect(alpha.url().endsWith('/gamma'), `the current tab moved to ${alpha.url()}`);
 });
 
-await step('the new tab page reloads itself for focus only while the setting is on', async () => {
-  expect((await newtabSearch()) === '?focus=1', 'the new tab page did not reload itself by default');
-  await options.bringToFront();
-  await options.click('[name=newtabFocus]');
-  await waitFor(async () => (await stored())?.newtabFocus === false, 'newtabFocus to be stored');
-  const search = await newtabSearch();
-  expect(search === '', `the new tab page still reloaded itself: "${search}"`);
-});
-
 await step('the settings survive a reload of the page', async () => {
   await options.reload();
   await waitFor(async () => (await shown()).openIn === 'currentTab', 'the stored values to be shown');
   const values = await shown();
-  expect(JSON.stringify(values) === JSON.stringify({ historyDays: '365', historyMax: '4000', closedCount: '0', openIn: 'currentTab', newtabFocus: false }), `shown: ${JSON.stringify(values)}`);
+  expect(JSON.stringify(values) === JSON.stringify({ historyDays: '365', historyMax: '4000', closedCount: '0', openIn: 'currentTab' }), `shown: ${JSON.stringify(values)}`);
 });
 
 await step('the button opens Chrome\'s shortcut settings', async () => {

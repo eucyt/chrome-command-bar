@@ -36,9 +36,6 @@
       "description": "コマンドバーを開く／閉じる"
     }
   },
-  "chrome_url_overrides": {
-    "newtab": "src/newtab.html"
-  },
   "web_accessible_resources": [
     {
       "resources": ["src/bar.html"],

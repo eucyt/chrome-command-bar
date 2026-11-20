@@ -1,7 +1,7 @@
 {
   "name": "yadokari",
   "private": true,
-  "description": "Arcの使い勝手をChromeに持ち込む個人用拡張機能",
+  "description": "Chromeにコマンドバーとタブの自動クローズを足す個人用拡張機能",
   "type": "module",
   "scripts": {
     "setup": "bash scripts/setup.sh",
@@ -9,6 +9,7 @@
     "test:e2e": "node test/e2e/run.mjs",
     "check": "npm test && npm run test:e2e",
     "package": "node scripts/package.mjs",
+    "screenshots": "node scripts/screenshots.mjs",
     "icons": "python3 scripts/make_icons.py"
   },
   "devDependencies": {

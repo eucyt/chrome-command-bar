@@ -1,104 +1,139 @@
-# yadokari
+<div align="center">
 
-Arcの使い勝手をChromeに持ち込む個人用の拡張機能。名前はヤドカリから。Chromeという殻に、Arcの習慣を持ち込んで住む。依存ライブラリなし、ビルド不要。
+<img src="icons/icon128.png" width="96" height="96" alt="">
 
-いまある機能は2つ。
+# Yadokari
 
-- **コマンドバー**(Arcの⌘T相当)。タブ・ブックマーク・履歴・最近閉じたタブを、1つの入力欄から曖昧検索する。
-- **タブの自動クローズ**。12時間使っていないタブを閉じ、アーカイブに記録する。
+**A command bar and automatic tab archiving for Chrome.**
 
-## インストール
+[![test](https://github.com/eucyt/yadokari/actions/workflows/test.yml/badge.svg)](https://github.com/eucyt/yadokari/actions/workflows/test.yml)
+[![release](https://img.shields.io/github/v/release/eucyt/yadokari)](https://github.com/eucyt/yadokari/releases/latest)
+[![license](https://img.shields.io/github/license/eucyt/yadokari)](LICENSE)
+![Manifest V3](https://img.shields.io/badge/manifest-v3-blue)
+![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
 
-1. [Releases](https://github.com/eucyt/yadokari/releases/latest) から `yadokari-<バージョン>.zip` をダウンロードして展開する。
-2. `chrome://extensions` を開き、右上の「デベロッパー モード」をオンにする。
-3. 「パッケージ化されていない拡張機能を読み込む」で、展開したフォルダを選ぶ。
-4. `chrome://extensions/shortcuts` で「コマンドバーを開く／閉じる」に ⌃T が入っていることを確認する(他と衝突して空欄なら手で割り当てる)。
+English | [日本語](README.ja.md)
 
-更新するときは、新しいzipを同じフォルダに展開し直し、`chrome://extensions` で拡張機能を再読み込みする。
+<img src="docs/bar.png" width="800" alt="The command bar open over a web page, listing a tab, a bookmark and a recently closed tab that match the query">
 
-## 使い方
+</div>
 
-| キー | 動作 |
+*Yadokari* is Japanese for hermit crab. Chrome is the shell, and this is what I carried in to make it home.
+
+## Features
+
+| Feature | What it does |
 |---|---|
-| ⌃T | バーを開く／閉じる |
-| ↑↓、Tab、Ctrl+N / Ctrl+P | 選択を移動 |
-| Enter | 選択した行を開く。タブなら切り替え、それ以外は新しいタブで開く(設定で現在のタブに変えられる) |
-| ⌥Enter | 現在のタブで開く(設定を変えた場合は新しいタブ) |
-| ⇧Enter | 入力した文字列をそのままWeb検索 |
-| Ctrl+⌫ | 選択中のタブを閉じる(バーは開いたまま) |
-| Esc、パネルの外をクリック | 閉じる |
+| Command bar | One input that fuzzy-searches tabs, bookmarks, history and recently closed tabs. Type `>` for commands such as duplicate, pin and copy URL. |
+| Tab auto-close | Tabs unused for 12 hours are closed and kept in a searchable archive for 30 days. Pinned, visible and audible tabs are left alone. |
 
-- 何も入力しないと、他のタブを最近使った順に表示する。Enterで直前のタブに戻れる。
-- スペース区切りで複数語を入れると、すべてに一致する行だけ残る。
-- URLらしい入力(`github.com`、`localhost:3000`)は先頭に「このURLを開く」が出る。
-- `>` で始めるとコマンドだけを検索する(タブを複製、ピン留め、URLをコピーなど)。
-- 一致が0件のときは、1文字の打ち間違い(脱字・隣同士の入れ替え)を許して探し直す。
-- フッター左に、バーを開いたページのホスト名を表示する。HTTPSでないページは警告色になる。
+The interface is in Japanese for now.
 
-## タブの自動クローズ
+## Install
 
-- 最後に使ってから12時間が過ぎたタブを閉じる。ピン留めしたタブ、各ウィンドウで表示中のタブ、音声を再生中のタブは閉じない。
-- 閉じたタブはアーカイブに残る。`>` の「アーカイブしたタブを表示」で新しい順に一覧し、Enterで開き直す。通常の検索にアーカイブは混ざらない。
-- アーカイブは最大500件、30日まで。同じページは1件にまとめる。シークレットウィンドウのタブは閉じるが、記録しない。
-- 止めるときは `>` の「タブの自動クローズをオフにする」。オンに戻すと、すべてのタブがそこから12時間の猶予を得る。
-- タイマーは使っていない。タブを切り替える・開く・閉じる・読み込むといった操作のたびに、期限切れのタブを探す。Chromeを触っていない間は閉じない。
-- 開き直したタブは同じURLを新しく読み込む。戻る／進むの履歴や入力途中のフォームは戻らない。
+Yadokari is not on the Chrome Web Store. You load it as an unpacked extension.
 
-## 設定
+1. Download `yadokari-<version>.zip` from [Releases](https://github.com/eucyt/yadokari/releases/latest) and unzip it.
+2. Open `chrome://extensions` and turn on **Developer mode**.
+3. Click **Load unpacked** and pick the unzipped folder.
+4. Check the shortcut at `chrome://extensions/shortcuts`. Assign it by hand if another extension already took it.
 
-`chrome://extensions` の Yadokari →「拡張機能のオプション」、またはバーで `>` の「Yadokariの設定を開く」。変更はその場で保存され、次にバーを開いたときから効く。
+To update, unzip the new release into the same folder and reload the extension.
 
-| 項目 | 既定 | 範囲 |
+## Usage
+
+Press **⌃T** on macOS or **Ctrl+Shift+K** elsewhere. Chrome reserves ⌘T, so an extension cannot use it.
+
+| Key | Action |
+|---|---|
+| ↑ ↓, Tab, Ctrl+N / Ctrl+P | Move the selection |
+| Enter | Switch to the tab, or open the result in a new tab |
+| ⌥Enter | Open in the current tab |
+| ⇧Enter | Search the web for what you typed |
+| Ctrl+⌫ | Close the selected tab |
+| Esc | Close the bar |
+
+On Windows and Linux, ⌥ is Alt and closing a tab is Alt+⌫.
+
+With an empty input the bar lists your other tabs, most recent first, so ⌃T then Enter jumps back to the previous tab.
+
+<details>
+<summary>More about search</summary>
+
+- Words separated by spaces must all match.
+- Input that looks like a URL (`github.com`, `localhost:3000`) gets an "open this URL" row at the top.
+- When nothing matches, the bar retries allowing one typo: a dropped letter or two swapped neighbours.
+- The footer shows the host of the page under the bar, in a warning colour when the page is not HTTPS.
+
+</details>
+
+<details>
+<summary>More about auto-close</summary>
+
+- Run "アーカイブしたタブを表示" from `>` to list the archive, and Enter to reopen a tab. The archive holds up to 500 entries and stays out of normal search.
+- Tabs in incognito windows are closed but never recorded.
+- Run "タブの自動クローズをオフにする" from `>` to turn it off. Turning it back on gives every tab a fresh 12 hours.
+- There is no timer. Expired tabs are closed when you switch, open, close or load a tab, so nothing closes while you are away.
+- A reopened tab loads its URL again. Back/forward history and half-filled forms do not come back.
+
+</details>
+
+<details>
+<summary>Settings</summary>
+
+Open them from the extension's options, or run "Yadokariの設定を開く" from `>`.
+
+| Setting | Default | Range |
 |---|---|---|
-| 履歴の対象期間 | 90日 | 1〜365日 |
-| 履歴の最大件数 | 4,000件 | 100〜20,000件 |
-| 未入力時に表示する「最近閉じたタブ」 | 5件 | 0〜25件 |
-| Enter で開く先 | 新しいタブ | 新しいタブ / 現在のタブ。⌥Enter は選ばなかったほうで開く |
+| History window | 90 days | 1 to 365 days |
+| History entries | 4,000 | 100 to 20,000 |
+| Recently closed tabs shown before typing | 5 | 0 to 25 |
+| Enter opens in | New tab | New tab or current tab. ⌥Enter does the other. |
 
-ショートカット設定ページ(`chrome://extensions/shortcuts`)を開くボタンもある。
+</details>
 
-## 仕組みと権限
+## Privacy and permissions
 
-- バーは拡張機能のページを `iframe` としてページに重ねている。入力内容と検索結果はページ側のスクリプトから読めない。
-- ページへの挿入は `activeTab` で行う。ショートカットを押したタブにだけ、その場で権限が付く。全サイトへの常時アクセス権(`<all_urls>`)は要求していない。
-- `iframe` には1回限りのトークンを渡している。Webページが勝手にこのページを埋め込んでも何も表示されない。
-- バーを開いている間にページがフォーカスを奪っても、バーが取り返す。打った文字がページ側の入力欄に流れないようにするため。
-- ページタイトルなど外部由来の文字列はテキストノードとしてだけ描画する。
-- 通信はしない。検索は `tabs` / `bookmarks` / `history` / `sessions` APIから読み、メモリ上で行う。ブックマークと履歴は読んだ結果を `storage.session` に置き、変更があるまで次に開いたバーがそれを使う。履歴は既定で直近90日・最大4,000件(設定で変えられる)。
+- **No network access.** Search runs in memory over Chrome's own tab, bookmark, history and session APIs.
+- **No standing access to websites.** The bar is injected with `activeTab`, which grants access only to the tab where you pressed the shortcut.
+- **Pages cannot read the bar.** It is an extension page in an `iframe`, so page scripts see neither your input nor the results.
+- **No dependencies and no build step.** What is in this repository is what Chrome runs.
 
-| 権限 | 用途 |
+`test/guardrails.test.js` enforces these rules on every commit.
+
+<details>
+<summary>What each permission is for</summary>
+
+| Permission | Use |
 |---|---|
-| `tabs` | 全タブのタイトルとURLを読む、切り替える |
-| `bookmarks` `history` `sessions` | 検索対象の取得、閉じたタブの復元 |
-| `activeTab` `scripting` | ショートカットを押したタブにバーを挿入 |
-| `search` | 既定の検索エンジンでのWeb検索 |
-| `favicon` | 行のアイコン表示 |
-| `storage` | トークン、タブの最終使用時刻、検索用に読んだブックマークと履歴の一時保存(`storage.session`、ブラウザ終了で消える)。設定、自動クローズの状態、アーカイブの保存(`storage.local`) |
+| `tabs` | Read tab titles and URLs, switch tabs |
+| `bookmarks` `history` `sessions` | Search sources, restoring closed tabs |
+| `activeTab` `scripting` | Inject the bar into the tab where you pressed the shortcut |
+| `search` | Web search with your default engine |
+| `favicon` | Row icons |
+| `storage` | Settings, the archive and auto-close state in `storage.local`. A per-session token, tab last-used times and a cache of bookmarks and history in `storage.session`, which is cleared when the browser quits. |
 
-## 制約
+</details>
 
-- `chrome://` ページ、Chromeウェブストア、新規タブページ、PDFビューアなどには挿入できない。そこではツールバーのポップアップとして開く。
-- ページが全画面表示やモーダル `<dialog>` を出している間は、バーがその下に隠れることがある。
-- シークレットウィンドウでは、拡張機能の詳細で「シークレット モードでの実行を許可する」をオンにしない限り動かない。
+## Limitations
 
-## 開発
+- Chrome does not allow injection into `chrome://` pages, the Web Store, the new tab page or the PDF viewer. There the bar opens as a toolbar popup.
+- A page in fullscreen or showing a modal `<dialog>` can cover the bar.
+- Incognito windows need "Allow in Incognito" turned on in the extension's details.
 
-作業のルールと検証方法は [CLAUDE.md](CLAUDE.md) にある。
+## Development
 
 ```sh
-npm test            # 単体テストとガードレール(依存の導入は不要)
-npm run setup       # 実機テストの準備(Linux)
-npm run test:e2e    # 実機テスト。Chrome for Testing を起動し、本物のキー入力で操作する
-npm run check       # 上の2つのテストを続けて実行
-npm run package     # 配布するファイルだけを dist/yadokari/ に集める(リリース時にCIがzipにするもの)
+npm test            # unit tests and guardrails, nothing to install
+npm run setup       # prepare the end-to-end tests (Linux only)
+npm run check       # unit tests, then end-to-end tests in a real Chrome
+npm run screenshots # retake docs/bar.png
 ```
 
-```
-manifest.json
-src/background.js      ショートカットを受けてバーを挿入・除去する
-src/bar.{html,css,js}  バー本体(オーバーレイ・ポップアップ共通)
-src/options.{html,css,js}  設定画面
-src/commands.js        「>」で出るコマンド
-src/lib/               曖昧一致・順位付け・URL判定(純粋関数)
-test/                  単体テストと実機テスト
-```
+Project rules and layout are in [CLAUDE.md](CLAUDE.md), in Japanese.
+
+This is a personal tool, so I may decline feature requests. Bug reports are welcome. Please open an issue before sending a pull request.
+
+## License
+
+[MIT](LICENSE)

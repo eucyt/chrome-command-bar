@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Yadokari",
   "version": "0.0.0",
-  "description": "Arcの使い勝手をChromeに持ち込む個人用拡張機能。タブ・ブックマーク・履歴を曖昧検索するコマンドバーなど。",
+  "description": "タブ・ブックマーク・履歴を曖昧検索するコマンドバーと、使っていないタブの自動クローズ。",
   "minimum_chrome_version": "127",
   "permissions": [
     "activeTab",

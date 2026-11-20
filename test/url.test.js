@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { dedupeKey, describeOrigin, hostLength, isOpenable, matchableUrl, toUrl } from '../src/lib/url.js';
+import { dedupeKey, describeOrigin, hostLength, isOpenable, matchableUrl, toUrl, withoutQuery } from '../src/lib/url.js';
 
 test('toUrl keeps explicit URLs', () => {
   assert.equal(toUrl('https://example.com/a?b=1'), 'https://example.com/a?b=1');
@@ -41,6 +41,20 @@ test('dedupeKey ignores www and a trailing slash but keeps query and hash', () =
   assert.notEqual(dedupeKey('https://example.com/a?x=1'), dedupeKey('https://example.com/a?x=2'));
   assert.notEqual(dedupeKey('https://example.com/#/a'), dedupeKey('https://example.com/#/b'));
   assert.notEqual(dedupeKey('http://example.com/'), dedupeKey('https://example.com/'));
+});
+
+test('withoutQuery cuts the query and keeps the fragment', () => {
+  assert.equal(withoutQuery('https://example.com/a?utm_source=x&b=2'), 'https://example.com/a');
+  assert.equal(withoutQuery('https://example.com/a?x=1#top'), 'https://example.com/a#top');
+  assert.equal(withoutQuery('http://localhost:3000/?debug'), 'http://localhost:3000/');
+  assert.equal(withoutQuery('https://example.com/a?'), 'https://example.com/a');
+});
+
+test('withoutQuery leaves URLs without a query, and other schemes, as given', () => {
+  assert.equal(withoutQuery('https://github.com'), 'https://github.com');
+  assert.equal(withoutQuery('https://example.com/#/route?tab=2'), 'https://example.com/#/route?tab=2');
+  assert.equal(withoutQuery('chrome://settings/?search=proxy'), 'chrome://settings/?search=proxy');
+  assert.equal(withoutQuery('file:///tmp/a.html?x=1'), 'file:///tmp/a.html?x=1');
 });
 
 test('matchableUrl drops the scheme and www', () => {

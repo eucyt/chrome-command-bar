@@ -67,6 +67,21 @@ export function dedupeKey(url) {
   }
 }
 
+/**
+ * The URL with its query string left off, keeping any fragment. Only http(s):
+ * other schemes do not split the query out the same way. Cut as text rather
+ * than through URL, so a URL without a query comes back exactly as given.
+ */
+export function withoutQuery(url) {
+  const text = String(url ?? '');
+  if (!/^https?:/i.test(text)) return text;
+  const hash = text.indexOf('#');
+  const head = hash === -1 ? text : text.slice(0, hash);
+  const query = head.indexOf('?');
+  if (query === -1) return text;
+  return head.slice(0, query) + (hash === -1 ? '' : text.slice(hash));
+}
+
 /** Text the matcher sees for a URL: no scheme, no leading "www.". */
 export function matchableUrl(url) {
   try {

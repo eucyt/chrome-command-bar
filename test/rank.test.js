@@ -45,6 +45,65 @@ test('buildIndex drops duplicates of open tabs, bookmarks and bookmarklets', () 
   assert.equal(items.some((i) => i.title === 'bookmarklet'), false);
 });
 
+test('history is listed without query strings, one row per page', () => {
+  const items = buildIndex({
+    history: [
+      { title: 'Article (from the newsletter)', url: 'https://example.com/article?utm_source=mail', visitCount: 2, typedCount: 1, lastVisitTime: NOW - 1000 },
+      { title: 'Article', url: 'https://example.com/article', visitCount: 5, lastVisitTime: NOW - DAY },
+      { title: 'Article, page 2', url: 'https://example.com/article?page=2', visitCount: 1, typedCount: 2, lastVisitTime: NOW - 2 * DAY },
+    ],
+  });
+  assert.deepEqual(
+    items.map(({ type, title, url, matchUrl, visitCount, typedCount, lastVisitTime }) => ({ type, title, url, matchUrl, visitCount, typedCount, lastVisitTime })),
+    [{ type: 'history', title: 'Article', url: 'https://example.com/article', matchUrl: 'example.com/article', visitCount: 8, typedCount: 3, lastVisitTime: NOW - 1000 }],
+  );
+});
+
+test('a page only ever visited with a query is listed without it, under its latest title', () => {
+  const items = buildIndex({
+    history: [
+      { title: '', url: 'https://example.com/list?sort=new', visitCount: 1, lastVisitTime: NOW },
+      { title: 'List, sorted by name', url: 'https://example.com/list?sort=name', visitCount: 1, lastVisitTime: NOW - 1000 },
+      { title: 'List, sorted by date', url: 'https://example.com/list?sort=date', visitCount: 1, lastVisitTime: NOW - DAY },
+      { title: '', url: 'https://example.com/untitled?id=1', visitCount: 1, lastVisitTime: NOW },
+    ],
+  });
+  assert.deepEqual(
+    items.map((i) => [i.title, i.url]),
+    [
+      ['List, sorted by name', 'https://example.com/list'],
+      ['https://example.com/untitled', 'https://example.com/untitled'],
+    ],
+  );
+});
+
+test('a query is no longer matched in history, but still is in tabs and bookmarks', () => {
+  const items = buildIndex({
+    tabs: [{ id: 1, windowId: 10, title: 'Results', url: 'https://example.com/search?q=wombat', lastAccessed: NOW }],
+    bookmarks: [{ title: 'Saved search', url: 'https://example.com/find?q=wombat', folder: '' }],
+    history: [
+      { title: 'Search', url: 'https://example.com/search?q=wombat', visitCount: 1, lastVisitTime: NOW },
+      { title: 'Find', url: 'https://example.com/find?q=wombat', visitCount: 1, lastVisitTime: NOW },
+    ],
+  });
+  assert.deepEqual(
+    search('wombat', items, { now: NOW }).map((r) => r.item.type),
+    ['tab', 'bookmark'],
+  );
+  assert.deepEqual(
+    items.filter((i) => i.type === 'history').map((i) => i.url),
+    ['https://example.com/search', 'https://example.com/find'],
+  );
+});
+
+test('history without its query gives way to a bookmark of the same page', () => {
+  const items = buildIndex({
+    bookmarks: [{ title: 'Docs', url: 'https://example.com/docs/', folder: '' }],
+    history: [{ title: 'Docs', url: 'https://www.example.com/docs?ref=nav', visitCount: 9, lastVisitTime: NOW }],
+  });
+  assert.deepEqual(items.map((i) => i.type), ['bookmark']);
+});
+
 test('defaultResults lists other tabs by recency, the current tab last, then closed tabs', () => {
   const rows = defaultResults(fixture());
   assert.deepEqual(titles(rows), [

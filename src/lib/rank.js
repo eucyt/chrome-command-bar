@@ -1,7 +1,7 @@
 // Turns raw tabs / bookmarks / history into one ranked result list. Pure functions.
 
 import { normalize, positionsPrepared, prepare, scorePrepared, toNeedle, typoVariants } from './fuzzy.js';
-import { dedupeKey, isOpenable, matchableUrl } from './url.js';
+import { dedupeKey, isOpenable, matchableUrl, withoutQuery } from './url.js';
 
 /** @typedef {'tab' | 'closed' | 'archived' | 'bookmark' | 'history' | 'command'} ItemType */
 
@@ -46,6 +46,7 @@ export function buildArchiveIndex(entries = []) {
 /**
  * Merges every source into one list, dropping duplicates of the same page.
  * Priority when the same URL appears twice: tab > closed > bookmark > history.
+ * History is listed without query strings; see mergeQueryVariants().
  */
 export function buildIndex({ tabs = [], closed = [], bookmarks = [], history = [], commands = [], contextTabId } = {}) {
   /** @type {Item[]} */
@@ -89,7 +90,7 @@ export function buildIndex({ tabs = [], closed = [], bookmarks = [], history = [
   for (const bm of bookmarks) {
     addUnique({ type: 'bookmark', title: bm.title || bm.url, url: bm.url, keywords: bm.folder || '' });
   }
-  for (const h of history) {
+  for (const h of mergeQueryVariants(history)) {
     addUnique({
       type: 'history',
       title: h.title || h.url,
@@ -104,6 +105,35 @@ export function buildIndex({ tabs = [], closed = [], bookmarks = [], history = [
   }
   for (const item of items) prepared.set(item, fieldsOf(item));
   return items;
+}
+
+/**
+ * One history entry per page with the query string left off, so that visits
+ * under tracking tags, sort orders or page numbers count toward the same row.
+ * The row is titled after the visit without a query when there was one, as
+ * the titles of the variants can each say something different.
+ */
+function mergeQueryVariants(history) {
+  const groups = new Map();
+  for (const h of history) {
+    if (!h.url) continue;
+    const key = dedupeKey(withoutQuery(h.url));
+    const group = groups.get(key);
+    if (group) group.push(h);
+    else groups.set(key, [h]);
+  }
+  const total = (group, field) => group.reduce((sum, h) => sum + (h[field] ?? 0), 0);
+  return [...groups.values()].map((group) => {
+    const plain = group.find((h) => withoutQuery(h.url) === h.url);
+    const latestFirst = [...group].sort((a, b) => (b.lastVisitTime ?? 0) - (a.lastVisitTime ?? 0));
+    return {
+      title: [plain, ...latestFirst].find((h) => h?.title)?.title ?? '',
+      url: withoutQuery((plain ?? latestFirst[0]).url),
+      visitCount: total(group, 'visitCount'),
+      typedCount: total(group, 'typedCount'),
+      lastVisitTime: latestFirst[0].lastVisitTime ?? 0,
+    };
+  });
 }
 
 // Query-independent match data per item, computed once when the index is built.

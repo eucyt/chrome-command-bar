@@ -66,6 +66,7 @@ With an empty input the bar lists your other tabs, most recent first, so ⌃T th
 - Words separated by spaces must all match.
 - Input that looks like a URL (`github.com`, `localhost:3000`) gets an "open this URL" row at the top.
 - When nothing matches, the bar retries allowing one typo: a dropped letter or two swapped neighbours.
+- History is listed without query strings. Visits to `example.com/a?ref=x` and `example.com/a?page=2` show as one `example.com/a` row, which opens without a query. Tabs, bookmarks and recently closed tabs keep theirs.
 - The footer shows the host of the page under the bar, in a warning colour when the page is not HTTPS.
 - The footer also says what Enter does to the selected row, and which other keys work on it.
 - The bar follows the system's light or dark appearance. Over a page it blurs the page behind it, unless the system is set to reduce transparency.

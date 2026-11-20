@@ -1,31 +1,66 @@
+/* 砂ガラス: warm sand and the crab's coral, on a frosted sheet over the blurred page.
+   The blur itself is set on the frame element by background.js: a filter in here
+   cannot reach the page behind the frame. */
+
 :root {
-  --bg: #ffffff;
-  --fg: #1c1c1e;
-  --muted: #6e6e73;
-  --line: rgba(0, 0, 0, 0.1);
-  --hover: rgba(0, 0, 0, 0.04);
-  --selected: #e8f0fe;
-  --accent: #1a73e8;
-  --mark: #1a73e8;
-  --warn: #c5221f;
-  --shadow: 0 24px 64px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.12);
+  --bg: rgba(255, 250, 242, 0.74);
+  --bg-solid: #fffaf2;
+  --bg-footer: rgba(120, 80, 40, 0.05);
+  --field: rgba(120, 80, 40, 0.09);
+  --fg: #2a241f;
+  --muted: #7b6f64;
+  --faint: #a89c90;
+  --line: rgba(70, 45, 20, 0.11);
+  --selected: linear-gradient(100deg, #b93f17, #c9501f);
+  --on-selected: #ffffff;
+  --on-selected-muted: rgba(255, 255, 255, 0.86);
+  --accent: #c9481f;
+  --marker: rgba(243, 150, 100, 0.42);
+  --marker-selected: rgba(255, 255, 255, 0.3);
+  --warn: #b3261e;
+  --scrim: rgba(45, 30, 18, 0.12);
+  --scroll: rgba(70, 45, 20, 0.22);
+  --key-bg: rgba(255, 255, 255, 0.65);
+  --edge: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  --glow: 0 4px 14px -4px rgba(170, 60, 20, 0.55);
+  --shadow: 0 0 0 1px rgba(70, 45, 20, 0.08), 0 8px 24px -6px rgba(60, 35, 15, 0.22), 0 32px 80px -18px rgba(60, 35, 15, 0.45);
   font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic UI', 'Segoe UI', sans-serif;
   font-size: 14px;
+  -webkit-font-smoothing: antialiased;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #242426;
-    --fg: #f2f2f7;
-    --muted: #a1a1a6;
-    --line: rgba(255, 255, 255, 0.12);
-    --hover: rgba(255, 255, 255, 0.05);
-    --selected: #34405a;
-    --accent: #8ab4f8;
-    --mark: #8ab4f8;
+    --bg: rgba(44, 36, 30, 0.68);
+    --bg-solid: #2a231e;
+    --bg-footer: rgba(0, 0, 0, 0.14);
+    --field: rgba(0, 0, 0, 0.26);
+    --fg: #f4ede6;
+    --muted: #ab9f94;
+    --faint: #7c7167;
+    --line: rgba(255, 235, 215, 0.1);
+    --selected: linear-gradient(100deg, #c2441a, #d65a26);
+    --accent: #ff9973;
+    --marker: rgba(255, 153, 115, 0.34);
     --warn: #f28b82;
-    --shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
-    }
+    --scrim: rgba(0, 0, 0, 0.3);
+    --scroll: rgba(255, 235, 215, 0.22);
+    --key-bg: rgba(255, 235, 215, 0.09);
+    --edge: inset 0 0 0 1px rgba(255, 235, 215, 0.14);
+    --shadow: 0 0 0 1px rgba(255, 235, 215, 0.1), 0 8px 24px -6px rgba(0, 0, 0, 0.5), 0 32px 80px -18px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* Nothing shows through in the popup and the small window, and some people ask for no transparency. */
+html[data-mode='popup'],
+html[data-mode='window'] {
+  --bg: var(--bg-solid);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  html:root {
+    --bg: var(--bg-solid);
+  }
 }
 
 * {
@@ -40,6 +75,21 @@ body {
   color: var(--fg);
 }
 
+#sprite {
+  position: absolute;
+}
+
+.glyph {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 #backdrop {
   position: fixed;
   inset: 0;
@@ -47,44 +97,107 @@ body {
   justify-content: center;
   align-items: flex-start;
   padding-top: 16vh;
+  background: var(--scrim);
 }
 
 #panel {
+  position: relative;
   width: min(680px, 92vw);
-  max-height: min(520px, 76vh);
+  max-height: min(580px, 80vh);
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 22px;
   box-shadow: var(--shadow);
   overflow: hidden;
 }
 
+/* The lit edge sits above the content so the selected row cannot paint over it. */
+#panel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--edge);
+  pointer-events: none;
+}
+
+/* Radius = the panel's minus the gap around the field, so the corners stay concentric. */
 #input-row {
-  padding: 4px 6px;
-  border-bottom: 1px solid var(--line);
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 50px;
+  margin: 10px 10px 2px;
+  padding: 0 16px;
+  background: var(--field);
+  border-radius: 12px;
+}
+
+#prompt {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+}
+
+#prompt .glyph {
+  width: 22px;
+  height: 22px;
+}
+
+:root[data-scope='all'] #prompt .glyph {
+  stroke-width: 2.1;
+}
+
+#scope {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+
+#scope[hidden] {
+  display: none;
 }
 
 #query {
-  width: 100%;
-  padding: 12px 12px;
+  flex: 1 1 auto;
+  min-width: 0;
   border: 0;
   outline: 0;
   background: transparent;
   color: var(--fg);
   font: inherit;
   font-size: 18px;
+  caret-color: var(--accent);
 }
 
 #query::placeholder {
-  color: var(--muted);
+  color: var(--faint);
+}
+
+#tip {
+  flex: none;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--faint);
+}
+
+:root[data-scope='all'][data-typed='false'] #tip {
+  display: inline-flex;
 }
 
 #results {
   list-style: none;
   margin: 0;
-  padding: 6px;
+  padding: 6px 10px 8px;
   overflow-y: auto;
   flex: 1 1 auto;
   min-height: 0;
@@ -94,50 +207,71 @@ body {
   display: none;
 }
 
+/* A slim thumb with no arrows, the same on every platform. */
+#results::-webkit-scrollbar {
+  width: 10px;
+}
+
+#results::-webkit-scrollbar-thumb {
+  background: var(--scroll);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 5px;
+}
+
+#results[data-more='true'] {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
+}
+
+.section {
+  padding: 8px 12px 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--faint);
+}
+
+.section:first-child {
+  padding-top: 2px;
+}
+
 .row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 7px 12px 7px 14px;
+  border-radius: 12px;
   cursor: default;
-  scroll-margin: 6px;
+  scroll-margin: 8px;
 }
 
-.row[aria-selected='true'] {
+.row[aria-selected='true']:not([data-type='empty']) {
   background: var(--selected);
-}
-
-/* The archive list has no web search. */
-:root[data-view='archive'] .all-only {
-  display: none;
+  color: var(--on-selected);
+  box-shadow: var(--glow);
 }
 
 .row[data-type='empty'] {
   color: var(--muted);
-  background: none;
 }
 
-.row[data-type='empty'] .icon,
-.row[data-type='empty'] .badge {
+.row[data-type='empty'] :is(.icon, .badge) {
   display: none;
 }
 
 .icon {
-  flex: 0 0 18px;
-  width: 18px;
-  height: 18px;
+  flex: none;
   display: grid;
   place-items: center;
+  width: 20px;
+  height: 20px;
   color: var(--muted);
-  font-size: 15px;
-  line-height: 1;
 }
 
 .icon img {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
 }
 
 .text {
@@ -154,41 +288,69 @@ body {
 
 .title {
   font-size: 14px;
-  line-height: 1.35;
+  line-height: 20px;
+  font-weight: 500;
 }
 
 .sub {
   font-size: 12px;
-  line-height: 1.3;
+  line-height: 17px;
   color: var(--muted);
 }
 
+.path {
+  color: var(--faint);
+}
+
+/* Matches are marked the way a highlighter pen would. */
 mark {
-  background: transparent;
-  color: var(--mark);
+  color: inherit;
   font-weight: 700;
+  background: linear-gradient(transparent 56%, var(--marker) 56%);
 }
 
 .badge {
-  flex: 0 0 auto;
-  font-size: 11px;
-  color: var(--muted);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 1px 6px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--faint);
 }
 
-.row[data-type='tab'] .badge {
+.badge .glyph {
+  width: 13px;
+  height: 13px;
+}
+
+.row[data-type='tab']:not([data-context]) .badge {
   color: var(--accent);
-  border-color: currentColor;
+}
+
+/* The section label, or the prompt, already says what these rows are. */
+#results[data-grouped='true'] .row:not([data-context]) .badge,
+:root:is([data-scope='command'], [data-scope='archive']) .badge {
+  display: none;
+}
+
+.row[aria-selected='true'] :is(.icon, .sub, .path, .badge),
+.row[aria-selected='true'][data-type='tab'] .badge {
+  color: var(--on-selected-muted);
+}
+
+.row[aria-selected='true'] mark {
+  background: linear-gradient(transparent 56%, var(--marker-selected) 56%);
 }
 
 #footer {
+  flex: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding: 7px 12px;
+  gap: 16px;
+  height: 40px;
+  padding: 0 14px 0 18px;
+  background: var(--bg-footer);
   border-top: 1px solid var(--line);
   font-size: 12px;
   color: var(--muted);
@@ -198,28 +360,82 @@ mark {
 #origin {
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-variant-numeric: tabular-nums;
-  color: var(--fg);
+}
+
+#origin .glyph {
+  width: 14px;
+  height: 14px;
 }
 
 #origin[data-secure='false'] {
   color: var(--warn);
-  font-weight: 700;
+  font-weight: 600;
+}
+
+.origin-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #hints {
-  flex: 0 0 auto;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
+.hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hint[data-primary] .label {
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.keys {
+  display: inline-flex;
+  gap: 3px;
+}
+
+/* Keys drawn as keycaps: a lip along the bottom edge. */
 kbd {
-  font: inherit;
-  font-size: 11px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px 1px;
   border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 0 4px;
-  margin: 0 3px 0 8px;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  background: var(--key-bg);
+  color: var(--muted);
+  font: inherit;
+  font-size: 11.5px;
+  line-height: 1;
+}
+
+kbd .glyph {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.6;
+}
+
+/* Interface labels are short runs of kana: set them proportionally, as a heading would be. */
+.badge,
+.section,
+.hint .label,
+#tip,
+#scope {
+  font-feature-settings: 'palt';
+  letter-spacing: 0.02em;
 }
 
 /* Toolbar popup and fallback window: the panel is the whole surface. */
@@ -237,6 +453,7 @@ html[data-mode='window'] body {
 html[data-mode='popup'] #backdrop,
 html[data-mode='window'] #backdrop {
   padding: 0;
+  background: none;
 }
 
 html[data-mode='popup'] #panel,
@@ -244,9 +461,13 @@ html[data-mode='window'] #panel {
   width: 100%;
   height: 100%;
   max-height: none;
-  border: 0;
   border-radius: 0;
   box-shadow: none;
+}
+
+html[data-mode='popup'] #panel::after,
+html[data-mode='window'] #panel::after {
+  display: none;
 }
 
 @media (max-width: 560px) {

@@ -11,7 +11,7 @@ const site = await serve({
 const origin = site.origin;
 const chrome = await launch();
 const { browser, inWorker, activeTab, allTabs } = chrome;
-const { barFrame, overlayPresent, waitClosed, openBar, rows, type, key, overlayId } = barDriver(chrome);
+const { barFrame, overlayPresent, waitClosed, openBar, rows, hints, type, key, overlayId } = barDriver(chrome);
 
 const alpha = (await browser.pages())[0];
 await alpha.goto(`${origin}/alpha`);
@@ -35,6 +35,8 @@ await step('the real shortcut opens the bar over a web page, with the input focu
     return { w: r.width, h: r.height, vw: innerWidth, vh: innerHeight };
   }, overlayId);
   expect(rect.w >= rect.vw - 20 && rect.h >= rect.vh - 20, `overlay does not cover the viewport: ${JSON.stringify(rect)}`);
+  // The display can trail the frame's DOM by a frame or two.
+  await sleep(300);
   screenshot('bar-default');
 });
 
@@ -44,6 +46,39 @@ await step('before typing: other tabs first, the current tab last and labelled',
   const current = list.find((r) => r.title === 'Alpha ホーム');
   expect(current?.badge === '現在のタブ', `current tab row: ${JSON.stringify(current)}`);
   expect(list.indexOf(current) === list.filter((r) => r.type === 'tab').length - 1, 'current tab is not last among tabs');
+});
+
+await step('before typing, the tabs are listed under a heading that replaces their labels', async () => {
+  const view = await frame.evaluate(() => ({
+    sections: [...document.querySelectorAll('#results .section')].map((el) => el.textContent),
+    labels: [...document.querySelectorAll('#results .row[data-type="tab"]')].map((row) => {
+      const badge = row.querySelector('.badge');
+      return getComputedStyle(badge).display === 'none' ? null : badge.textContent;
+    }),
+    prompt: document.querySelector('#prompt use')?.getAttribute('href'),
+    tip: getComputedStyle(document.getElementById('tip')).display,
+  }));
+  expect(view.sections[0] === '開いているタブ', `sections: ${view.sections}`);
+  // Only the tab the bar was opened on keeps a label, to say which one it is.
+  expect(view.labels.filter(Boolean).join() === '現在のタブ', `visible labels: ${JSON.stringify(view.labels)}`);
+  expect(view.prompt === '#i-shell' && view.tip !== 'none', `prompt ${view.prompt}, tip ${view.tip}`);
+});
+
+await step('the footer says what the keys do to the selected row', async () => {
+  const first = await hints(frame);
+  expect(first[0] === 'タブに切り替え' && first.includes('タブを閉じる'), `hints on a tab row: ${first}`);
+  await type(frame, 'btgh');
+  await key(frame, 'ArrowUp');
+  const list = await rows(frame);
+  expect(list.at(-1).selected && list.at(-1).type === 'search', `selection: ${JSON.stringify(list.at(-1))}`);
+  const onSearch = await hints(frame);
+  expect(onSearch[0] === 'Web検索' && !onSearch.includes('タブを閉じる'), `hints on the search row: ${onSearch}`);
+  const sections = await frame.$$eval('#results .section', (els) => els.length);
+  expect(sections === 0, 'headings are shown while searching');
+  await type(frame, '>');
+  const commands = await frame.evaluate(() => ({ prompt: document.querySelector('#prompt use')?.getAttribute('href'), hints: [...document.querySelectorAll('#hints .label')].map((el) => el.textContent) }));
+  expect(commands.prompt === '#i-command' && commands.hints[0] === '実行', `commands: ${JSON.stringify(commands)}`);
+  await type(frame, '');
 });
 
 await step('the footer shows the host of the page under the bar', async () => {

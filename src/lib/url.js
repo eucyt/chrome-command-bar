@@ -81,6 +81,18 @@ export function matchableUrl(url) {
   }
 }
 
+/**
+ * How many characters of a matchableUrl() text are the host, so the host can be
+ * drawn apart from the path. Counted in code points, like match positions.
+ * Text that still has a scheme (chrome://, file://) is not split.
+ */
+export function hostLength(text) {
+  const chars = Array.from(String(text ?? ''));
+  if (/^([a-z][a-z0-9+.-]*:\/\/|about:|view-source:)/i.test(chars.join(''))) return chars.length;
+  const cut = chars.findIndex((ch) => ch === '/' || ch === '?' || ch === '#');
+  return cut === -1 ? chars.length : cut;
+}
+
 function safeDecode(text) {
   try {
     return decodeURI(text);

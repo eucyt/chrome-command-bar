@@ -57,7 +57,8 @@ await step('over a fullscreen video the bar is visible and takes keys', async ()
   screenshot('bar-over-fullscreen-video');
   const box = await frame.$eval('#query', (el) => el.getBoundingClientRect().toJSON());
   const pixel = await pixelAt(page, box.x + box.width - 10, box.y + box.height / 2);
-  expect(pixel.every((c) => c > 200), `the pixel inside the input is ${pixel}; the video is covering the bar`);
+  // The panel is see-through, so over the black video the input is a dimmed sand colour, not white.
+  expect(pixel.every((c) => c > 120), `the pixel inside the input is ${pixel}; the video is covering the bar`);
   await key(frame, 'Escape');
   await waitClosed(page);
   await page.evaluate(() => document.exitFullscreen());

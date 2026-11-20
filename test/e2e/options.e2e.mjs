@@ -11,7 +11,7 @@ const site = await serve({
 const origin = site.origin;
 const chrome = await launch();
 const { browser, extensionId, inWorker, activeTab, allTabs } = chrome;
-const { waitClosed, openBar, rows, type, key } = barDriver(chrome);
+const { waitClosed, openBar, rows, hints, type, key } = barDriver(chrome);
 
 const alpha = (await browser.pages())[0];
 await alpha.goto(`${origin}/alpha`);
@@ -58,10 +58,10 @@ await step('the page shows the defaults and the current shortcut', async () => {
 await step('by default the bar lists the closed tab and Enter opens a typed URL in a new tab', async () => {
   frame = await openBar(alpha);
   await waitFor(async () => (await rows(frame)).some((r) => r.type === 'closed'), 'the closed tab row');
-  const hint = await frame.$eval('.alt-action', (el) => el.textContent);
-  expect(hint === 'このタブで開く', `hint: ${hint}`);
   const before = (await allTabs()).length;
   await type(frame, `${origin}/gamma`);
+  const shown = await hints(frame);
+  expect(shown[0] === '新しいタブで開く' && shown[1] === 'このタブで開く', `hints: ${shown}`);
   await key(frame, 'Enter');
   await waitFor(async () => (await allTabs()).length === before + 1, 'a new tab');
   expect(alpha.url().endsWith('/alpha'), `the current tab moved to ${alpha.url()}`);
@@ -94,11 +94,11 @@ await step('set to "現在のタブ", Enter reuses the tab and the modifier open
   screenshot('options-changed');
 
   frame = await openBar(alpha);
-  const hint = await frame.$eval('.alt-action', (el) => el.textContent);
-  expect(hint === '新しいタブで開く', `hint: ${hint}`);
-  screenshot('options-bar-current-tab');
   let before = (await allTabs()).length;
   await type(frame, `${origin}/gamma`);
+  const shown = await hints(frame);
+  expect(shown[0] === 'このタブで開く' && shown[1] === '新しいタブで開く', `hints: ${shown}`);
+  screenshot('options-bar-current-tab');
   await key(frame, 'Enter');
   await waitFor(() => alpha.url().endsWith('/gamma'), 'the current tab to navigate');
   expect((await allTabs()).length === before, 'a tab was opened as well');

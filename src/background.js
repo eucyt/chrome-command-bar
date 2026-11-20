@@ -127,9 +127,13 @@ function toggleOverlay(src) {
     display: 'block',
     'z-index': '2147483647',
     background: 'transparent',
-    // Must equal the frame document's scheme, or Chrome paints the frame opaque.
-    'color-scheme': 'light',
+    // Must resolve to the frame document's scheme, or Chrome paints the frame opaque.
+    // The frame's prefers-color-scheme follows this rather than the system setting,
+    // so "light" alone would hold the bar in its light colours.
+    'color-scheme': 'light dark',
   };
+  // The panel is frosted glass, and only the frame element can blur what is behind it.
+  if (!matchMedia('(prefers-reduced-transparency: reduce)').matches) styles['backdrop-filter'] = 'blur(14px) saturate(150%)';
   for (const [prop, value] of Object.entries(styles)) frame.style.setProperty(prop, value, 'important');
 
   const previouslyFocused = document.activeElement;

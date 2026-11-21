@@ -7,6 +7,7 @@ const site = await serve({
   ...PAGES,
   '/bookmarked-target': { title: 'Bookmarked target', body: '<p>bookmark</p>' },
   '/typed-target': { title: 'Typed target', body: '<p>typed</p>' },
+  '/history-only-kombucha': { title: 'History only', body: '<p>history</p>' },
 });
 const origin = site.origin;
 const chrome = await launch();
@@ -21,7 +22,8 @@ await beta.goto(`${origin}/beta-github`);
 await inWorker(async (origin) => {
   await chrome.bookmarks.create({ title: 'お気に入りのページ Bookmarked', url: `${origin}/bookmarked-target` });
   await chrome.bookmarks.create({ title: 'bookmarklet', url: 'javascript:alert(1)' });
-  await chrome.history.addUrl({ url: `${origin}/history-only-page?topic=kombucha` });
+  await chrome.history.addUrl({ url: `${origin}/history-only-kombucha?ref=newsletter` });
+  await chrome.history.addUrl({ url: `${origin}/history-only-kombucha?ref=feed` });
 }, origin);
 
 let frame;
@@ -168,11 +170,20 @@ await step('bookmarks are found, bookmarklets are not, and Enter opens a new tab
   await waitClosed(alpha);
 });
 
-await step('history entries are found by URL', async () => {
+await step('history is found by URL as one row without the query, and opens without it', async () => {
   frame = await openBar(alpha);
   await type(frame, 'kombucha');
-  const top = (await rows(frame))[0];
-  expect(top.type === 'history' && top.sub.includes('history-only-page'), `top row: ${JSON.stringify(top)}`);
+  const list = await rows(frame);
+  const history = list.filter((r) => r.type === 'history');
+  expect(list[0].type === 'history' && history.length === 1, `rows: ${JSON.stringify(list)}`);
+  expect(history[0].sub.endsWith('/history-only-kombucha'), `history row: ${JSON.stringify(history[0])}`);
+  await key(frame, 'Enter');
+  const opened = await waitFor(async () => {
+    const tab = await activeTab();
+    return /\/history-only-kombucha/.test(tab.url || tab.pendingUrl || '') ? tab : null;
+  }, 'the history entry to open');
+  expect(new URL(opened.url || opened.pendingUrl).search === '', `opened ${opened.url || opened.pendingUrl}`);
+  await waitClosed(alpha);
 });
 
 await step('a typed URL is offered first; Alt+Enter opens it in the current tab', async () => {

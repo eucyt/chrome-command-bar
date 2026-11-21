@@ -74,10 +74,10 @@ await step('a removed bookmark is gone from the next bar', async () => {
 
 await step('a page visited since then is found in the next bar', async () => {
   await waitFor(async () => isCurrent(await session()), 'a current cache');
-  await inWorker((origin) => chrome.history.addUrl({ url: `${origin}/history-only?topic=kombucha` }), origin);
+  await inWorker((origin) => chrome.history.addUrl({ url: `${origin}/history-only-kombucha` }), origin);
   await waitFor(async () => !isCurrent(await session()), 'the visit to be noted');
   const titles = await titlesFor('kombucha');
-  expect(titles.some((t) => t.includes('topic=kombucha')), `rows: ${JSON.stringify(titles)}`);
+  expect(titles.some((t) => t.includes('history-only-kombucha')), `rows: ${JSON.stringify(titles)}`);
 });
 
 await finish(chrome, site);
